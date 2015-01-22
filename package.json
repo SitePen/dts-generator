@@ -1,0 +1,15 @@
+{
+  "name": "dts-generator",
+  "description": ".d.ts generator. Generates a single d.ts bundle containing external modules from TypeScript files.",
+  "version": "1.0.0-pre",
+  "bin": {
+    "dts-generator": "bin/dts-generator.js"
+  },
+  "dependencies": {
+    "glob": "4.3.2"
+  },
+  "devDependencies": {
+    "typescript": "https://github.com/Microsoft/typescript/archive/2052ac39588d04d21e8cbaf26a3cacdb1a4eb150.tar.gz",
+    "tsd": "next"
+  }
+}
