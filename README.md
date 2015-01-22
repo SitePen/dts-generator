@@ -21,7 +21,7 @@ JavaScript that users can simply reference from the TypeScript compiler using a 
 
    Programmatically:
 
-```js
+   ```js
 require('dts-generator').generate({
 	name: 'package-name',
 	baseDir: '/path/to/package-directory',
@@ -31,13 +31,13 @@ require('dts-generator').generate({
 
    Command-line:
 
-```bash
+   ```bash
 node bin/dts-generator.js --name package-name --baseDir /path/to/package-directory --out package-name.d.ts
 ```
 
 3. Reference your generated d.ts bundle from somewhere in your consumer module and import away!:
 
-```ts
+   ```ts
 /// <reference path="typings/package-name.d.ts" />
 
 import Foo = require('package-name/Foo');
