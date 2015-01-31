@@ -15,7 +15,7 @@ JavaScript that users can simply reference from the TypeScript compiler using a 
 
 ## Usage
 
-1. Run setup.sh and follow the instructions to build.
+1. `npm install SitePen/dts-generator`
 
 2. Generate your d.ts bundle:
 
@@ -32,7 +32,7 @@ require('dts-generator').generate({
    Command-line:
 
    ```bash
-node bin/dts-generator.js --name package-name --baseDir /path/to/package-directory --out package-name.d.ts
+dts-generator --name package-name --baseDir /path/to/package-directory --out package-name.d.ts
 ```
 
 3. Reference your generated d.ts bundle from somewhere in your consumer module and import away!:
@@ -58,9 +58,6 @@ import Foo = require('package-name/Foo');
 
 ## Known issues
 
-* dts-generator uses APIs that are exposed by TypeScript but are not part of the language services’ own declarations
-  file, so some compiler warnings are emitted when building it at the moment
-* You need to jump through hoops, run setup.sh and use a pre-release version of TypeScript at the moment
 * The API should allow a list of files to be sent instead of a single directory
 * Output bundle code formatting is not perfect yet
 
