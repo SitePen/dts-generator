@@ -40,13 +40,27 @@ function exitWithError(status: ts.EmitReturnStatus, diagnostics: ts.Diagnostic[]
 	process.exit(status);
 }
 
+var filenameToMid:(filename: string) => string = (function () {
+	if (pathUtil.sep === '/') {
+		return function (filename: string) {
+			return filename;
+		};
+	}
+	else {
+		var separatorExpression = new RegExp(pathUtil.sep.replace('\\', '\\\\'), 'g');
+		return function (filename: string) {
+			return filename.replace(separatorExpression, '/');
+		};
+	}
+})();
+
 function getFilenames(baseDir: string, excludes: string[] = []): string[] {
 	return glob.sync('**/*.ts', {
 		cwd: baseDir
 	}).filter(function (filename) {
 		return excludes.indexOf(filename) === -1
-			&& !/(?:^|\/)tests\//.test(filename)
-			&& !/(?:^|\/)node_modules\//.test(filename);
+			&& !/(?:^|\/|\\)tests(?:\/|\\)/.test(filename)
+			&& !/(?:^|\/|\\)node_modules(?:\/|\\)/.test(filename);
 	}).map(function (filename) {
 		return pathUtil.join(baseDir, filename);
 	});
@@ -146,7 +160,7 @@ export function generate(options: Options) {
 
 	function writeDeclaration(declarationFile: ts.SourceFile) {
 		var filename = declarationFile.filename;
-		var sourceModuleId = options.name + filename.slice(baseDir.length, -5);
+		var sourceModuleId = options.name + filenameToMid(filename.slice(baseDir.length, -5));
 
 		if (declarationFile.externalModuleIndicator) {
 			output.write('declare module \'' + sourceModuleId + '\' {' + eol + indent);
