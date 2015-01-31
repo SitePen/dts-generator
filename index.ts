@@ -20,6 +20,7 @@ interface Options {
 	excludes?: string[];
 	eol?: string;
 	indent?: string;
+	main?: string;
 	name: string;
 	out: string;
 	target?: ts.ScriptTarget;
@@ -155,6 +156,13 @@ export function generate(options: Options) {
 			);
 		}
 	});
+
+	if (options.main) {
+		output.write('declare module \'' + options.name + '\' {' + eol + indent);
+		output.write('import main = require(\'' + options.main + '\');' + eol + indent);
+		output.write('export = main;' + eol);
+		output.write('}' + eol);
+	}
 
 	output.end();
 

@@ -52,6 +52,7 @@ import Foo = require('package-name/Foo');
 * `excludes?: string[]`: A list of files, relative to `baseDir`, that should be excluded from the bundle.
 * `eol?: string`: The end-of-line character that should be used when outputting code. Defaults to `os.EOL`.
 * `indent?: string`: The character(s) that should be used to indent the declarations in the output. Defaults to `\t`.
+* `main?: string`: The module ID that should be used as the exported value of the package’s “main” module.
 * `name: string`: The name of the package. Used to determine the correct exported package name for modules.
 * `out: string`: The filename where the generated bundle will be created.
 * `target?: ts.ScriptTarget`: The target environment for generated code. Defaults to `ts.ScriptTarget.Latest`.
