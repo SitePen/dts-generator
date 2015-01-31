@@ -18,7 +18,7 @@ interface Options {
 	target?: ts.ScriptTarget;
 }
 
-interface EmitterError extends Error {
+export interface EmitterError extends Error {
 	status: number;
 }
 

@@ -28,4 +28,10 @@ for (var i = 2, j = process.argv.length; i < j; i += 2) {
 	}
 });
 
-dts.generate(<any> kwArgs);
+console.log('Starting');
+dts.generate(<any> kwArgs).then(function () {
+	console.log('Done!');
+}, function (error: dts.EmitterError) {
+	console.error(error);
+	process.exit(error.status || 1);
+});
