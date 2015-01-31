@@ -4,6 +4,7 @@ import fs = require('fs');
 import glob = require('glob');
 import os = require('os');
 import pathUtil = require('path');
+import Promise = require('bluebird');
 import ts = require('typescript');
 
 interface Options {
@@ -17,19 +18,8 @@ interface Options {
 	target?: ts.ScriptTarget;
 }
 
-function exitWithError(status: ts.EmitReturnStatus, diagnostics: ts.Diagnostic[]) {
-	var message = 'Declaration generation failed with status ' + ts.EmitReturnStatus[status];
-
-	diagnostics.forEach(function (diagnostic) {
-		var position = diagnostic.file.getLineAndCharacterFromPosition(diagnostic.start);
-
-		message +=
-			`\n${diagnostic.file.filename}(${position.line},${position.character}): ` +
-			`error TS${diagnostic.code}: ${diagnostic.messageText}`;
-	});
-
-	console.error(message);
-	process.exit(status);
+interface EmitterError extends Error {
+	status: number;
 }
 
 var filenameToMid:(filename: string) => string = (function () {
@@ -45,6 +35,23 @@ var filenameToMid:(filename: string) => string = (function () {
 		};
 	}
 })();
+
+function getError(status: ts.EmitReturnStatus, diagnostics: ts.Diagnostic[]) {
+	var message = 'Declaration generation failed with status ' + ts.EmitReturnStatus[status];
+
+	diagnostics.forEach(function (diagnostic) {
+		var position = diagnostic.file.getLineAndCharacterFromPosition(diagnostic.start);
+
+		message +=
+			`\n${diagnostic.file.filename}(${position.line},${position.character}): ` +
+			`error TS${diagnostic.code}: ${diagnostic.messageText}`;
+	});
+
+	var error = <EmitterError> new Error(message);
+	error.name = 'EmitterError';
+	error.status = status;
+	return error;
+}
 
 function getFilenames(baseDir: string, excludes: string[] = []): string[] {
 	return glob.sync('**/*.ts', {
@@ -122,40 +129,47 @@ export function generate(options: Options) {
 
 	var emitResolver = checker.getEmitResolver();
 
-	program.getSourceFiles().forEach(function (sourceFile) {
-		// Source file is a default library, or other dependency from another project, that should not be included in
-		// our bundled output
-		if (sourceFile.filename.indexOf(baseDir) !== 0) {
-			return;
+	return new Promise<void>(function (resolve, reject) {
+		output.on('close', () => { resolve(undefined); });
+		output.on('error', reject);
+
+		program.getSourceFiles().some(function (sourceFile) {
+			// Source file is a default library, or other dependency from another project, that should not be included in
+			// our bundled output
+			if (sourceFile.filename.indexOf(baseDir) !== 0) {
+				return;
+			}
+
+			console.log(`Processing ${sourceFile.filename}`);
+
+			// Source file is already a declaration file so should does not need to be pre-processed by the emitter
+			if (sourceFile.filename.slice(-5) === '.d.ts') {
+				writeDeclaration(sourceFile);
+				return;
+			}
+
+			var emitOutput = ts.emitFiles(emitResolver, emitHost, sourceFile);
+			if (emitOutput.emitResultStatus !== ts.EmitReturnStatus.Succeeded) {
+				reject(getError(
+					emitOutput.emitResultStatus,
+					emitOutput.diagnostics
+						.concat(program.getDiagnostics(sourceFile))
+						.concat(checker.getDiagnostics(sourceFile))
+				));
+
+				return true;
+			}
+		});
+
+		if (options.main) {
+			output.write('declare module \'' + options.name + '\' {' + eol + indent);
+			output.write('import main = require(\'' + options.main + '\');' + eol + indent);
+			output.write('export = main;' + eol);
+			output.write('}' + eol);
 		}
 
-		console.log(`Processing ${sourceFile.filename}`);
-
-		// Source file is already a declaration file so should does not need to be pre-processed by the emitter
-		if (sourceFile.filename.slice(-5) === '.d.ts') {
-			writeDeclaration(sourceFile);
-			return;
-		}
-
-		var emitOutput = ts.emitFiles(emitResolver, emitHost, sourceFile);
-		if (emitOutput.emitResultStatus !== ts.EmitReturnStatus.Succeeded) {
-			exitWithError(
-				emitOutput.emitResultStatus,
-				emitOutput.diagnostics
-					.concat(program.getDiagnostics(sourceFile))
-					.concat(checker.getDiagnostics(sourceFile))
-			);
-		}
+		output.end();
 	});
-
-	if (options.main) {
-		output.write('declare module \'' + options.name + '\' {' + eol + indent);
-		output.write('import main = require(\'' + options.main + '\');' + eol + indent);
-		output.write('export = main;' + eol);
-		output.write('}' + eol);
-	}
-
-	output.end();
 
 	function writeDeclaration(declarationFile: ts.SourceFile) {
 		var filename = declarationFile.filename;

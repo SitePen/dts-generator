@@ -16,6 +16,9 @@
     },
     "typescript/typescript.d.ts": {
       "commit": "4f0eec65afc75001ef6ce2af5734f5dfc1b5568d"
+    },
+    "bluebird/bluebird.d.ts": {
+      "commit": "7bab855ae33d79e86da1eb6c73a7f7eab2676ddb"
     }
   }
 }
