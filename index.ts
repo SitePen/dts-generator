@@ -6,15 +6,6 @@ import os = require('os');
 import pathUtil = require('path');
 import ts = require('typescript');
 
-interface DiagnosticTypeChecker extends ts.TypeChecker {
-	getEmitResolver(): ts.EmitResolver;
-}
-
-// declare module ts {
-// 	export function createEmitHostFromProgram(program: ts.Program): any;
-// 	export function emitFiles(resolver: ts.EmitResolver, host: any, targetSourceFile?: ts.SourceFile): ts.EmitResult;
-// }
-
 interface Options {
 	baseDir: string;
 	excludes?: string[];
@@ -117,7 +108,7 @@ export function generate(options: Options) {
 
 	var host = ts.createCompilerHost(compilerOptions);
 	var program = ts.createProgram(filenames, compilerOptions, host);
-	var checker = <DiagnosticTypeChecker> ts.createTypeChecker(program, true);
+	var checker = ts.createTypeChecker(program, true);
 
 	var emitHost = ts.createEmitHostFromProgram(program);
 	emitHost.writeFile = function (filename: string, data: string, writeByteOrderMark: boolean) {
