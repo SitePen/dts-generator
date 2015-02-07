@@ -49,7 +49,10 @@ import Foo = require('package-name/Foo');
 
 * `baseDir: string`: The base directory for the package being bundled. Any dependencies discovered outside this
   directory will be excluded from the bundle.
-* `excludes?: string[]`: A list of files, relative to `baseDir`, that should be excluded from the bundle.
+* `excludes?: string[]`: A list of files, relative to `baseDir`, that should be excluded from the bundle. Use the
+  `--exclude` flag one or more times on the command-line.
+* `externs?: string[]`: A list of external module reference paths that should be inserted as reference comments. Use
+  the `--extern` flag one or more times on the command-line.
 * `eol?: string`: The end-of-line character that should be used when outputting code. Defaults to `os.EOL`.
 * `indent?: string`: The character(s) that should be used to indent the declarations in the output. Defaults to `\t`.
 * `main?: string`: The module ID that should be used as the exported value of the package’s “main” module.
