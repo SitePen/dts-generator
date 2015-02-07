@@ -10,6 +10,7 @@ import ts = require('typescript');
 interface Options {
 	baseDir: string;
 	excludes?: string[];
+	externs?: string[];
 	eol?: string;
 	indent?: string;
 	main?: string;
@@ -98,7 +99,7 @@ function processTree(sourceFile: ts.SourceFile, replacer:(node: ts.Node) => stri
 	return code;
 }
 
-export function generate(options: Options) {
+export function generate(options: Options, sendMessage: (message: string) => void = function () {}) {
 	var baseDir = pathUtil.resolve(options.baseDir);
 	var eol = options.eol || os.EOL;
 	var nonEmptyLineStart = new RegExp(eol + '(?!' + eol + '|$)', 'g');
@@ -133,6 +134,13 @@ export function generate(options: Options) {
 		output.on('close', () => { resolve(undefined); });
 		output.on('error', reject);
 
+		if (options.externs) {
+			options.externs.forEach(function (path: string) {
+				sendMessage(`Writing external dependency ${path}`);
+				output.write(`/// <reference path="${path}" />` + eol);
+			});
+		}
+
 		program.getSourceFiles().some(function (sourceFile) {
 			// Source file is a default library, or other dependency from another project, that should not be included in
 			// our bundled output
@@ -140,7 +148,7 @@ export function generate(options: Options) {
 				return;
 			}
 
-			console.log(`Processing ${sourceFile.filename}`);
+			sendMessage(`Processing ${sourceFile.filename}`);
 
 			// Source file is already a declaration file so should does not need to be pre-processed by the emitter
 			if (sourceFile.filename.slice(-5) === '.d.ts') {
@@ -162,10 +170,11 @@ export function generate(options: Options) {
 		});
 
 		if (options.main) {
-			output.write('declare module \'' + options.name + '\' {' + eol + indent);
-			output.write('import main = require(\'' + options.main + '\');' + eol + indent);
+			output.write(`declare module '${options.name}' {` + eol + indent);
+			output.write(`import main = require('${options.main}');` + eol + indent);
 			output.write('export = main;' + eol);
 			output.write('}' + eol);
+			sendMessage(`Aliased main module ${options.name} to ${options.main}`);
 		}
 
 		output.end();

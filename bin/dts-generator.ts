@@ -3,6 +3,7 @@ import dts = require('../index');
 var kwArgs:{
 	[key:string]: any;
 	excludes?: string[];
+	externs?: string[];
 } = {};
 
 for (var i = 2, j = process.argv.length; i < j; i += 2) {
@@ -15,6 +16,13 @@ for (var i = 2, j = process.argv.length; i < j; i += 2) {
 		}
 
 		kwArgs.excludes.push(value);
+	}
+	else if (key === 'extern') {
+		if (!kwArgs.externs) {
+			kwArgs.externs = [];
+		}
+
+		kwArgs.externs.push(value);
 	}
 	else {
 		kwArgs[key] = value;
@@ -29,7 +37,7 @@ for (var i = 2, j = process.argv.length; i < j; i += 2) {
 });
 
 console.log('Starting');
-dts.generate(<any> kwArgs).then(function () {
+dts.generate(<any> kwArgs, console.log.bind(console)).then(function () {
 	console.log('Done!');
 }, function (error: dts.EmitterError) {
 	console.error(error);
