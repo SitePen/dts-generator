@@ -19,6 +19,9 @@
     },
     "bluebird/bluebird.d.ts": {
       "commit": "7bab855ae33d79e86da1eb6c73a7f7eab2676ddb"
+    },
+    "mkdirp/mkdirp.d.ts": {
+      "commit": "35fffaa44bff5392741b3022d805fe3563023a3d"
     }
   }
 }

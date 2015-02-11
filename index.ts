@@ -2,6 +2,7 @@
 
 import fs = require('fs');
 import glob = require('glob');
+import mkdirp = require('mkdirp');
 import os = require('os');
 import pathUtil = require('path');
 import Promise = require('bluebird');
@@ -112,6 +113,8 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 	};
 
 	var filenames = getFilenames(baseDir, options.excludes);
+
+	mkdirp.sync(pathUtil.dirname(options.out));
 	var output = fs.createWriteStream(options.out, { mode: parseInt('644', 8) });
 
 	var host = ts.createCompilerHost(compilerOptions);
