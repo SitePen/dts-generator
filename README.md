@@ -25,6 +25,7 @@ JavaScript that users can simply reference from the TypeScript compiler using a 
 require('dts-generator').generate({
 	name: 'package-name',
 	baseDir: '/path/to/package-directory',
+  files: [ 'a.ts', 'b.ts', ... ]
 	out: 'package-name.d.ts'
 });
 ```
@@ -32,7 +33,7 @@ require('dts-generator').generate({
    Command-line:
 
    ```bash
-dts-generator --name package-name --baseDir /path/to/package-directory --out package-name.d.ts
+dts-generator --name package-name --baseDir /path/to/package-directory --out package-name.d.ts a.ts b.ts ...
 ```
 
 3. Reference your generated d.ts bundle from somewhere in your consumer module and import away!:
@@ -53,6 +54,7 @@ import Foo = require('package-name/Foo');
   `--exclude` flag one or more times on the command-line.
 * `externs?: string[]`: A list of external module reference paths that should be inserted as reference comments. Use
   the `--extern` flag one or more times on the command-line.
+* `files: string[]`: A list of files from the baseDir to bundle.
 * `eol?: string`: The end-of-line character that should be used when outputting code. Defaults to `os.EOL`.
 * `indent?: string`: The character(s) that should be used to indent the declarations in the output. Defaults to `\t`.
 * `main?: string`: The module ID that should be used as the exported value of the package’s “main” module.
@@ -62,7 +64,6 @@ import Foo = require('package-name/Foo');
 
 ## Known issues
 
-* The API should allow a list of files to be sent instead of a single directory
 * Output bundle code formatting is not perfect yet
 
 ## Thanks

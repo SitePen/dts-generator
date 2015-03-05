@@ -10,9 +10,11 @@ import ts = require('typescript');
 
 interface Options {
 	baseDir: string;
+	files: string[];
 	excludes?: string[];
 	externs?: string[];
 	eol?: string;
+	includes?: string[];
 	indent?: string;
 	main?: string;
 	name: string;
@@ -55,15 +57,9 @@ function getError(status: ts.EmitReturnStatus, diagnostics: ts.Diagnostic[]) {
 	return error;
 }
 
-function getFilenames(baseDir: string, excludes: string[] = []): string[] {
-	return glob.sync('**/*.ts', {
-		cwd: baseDir
-	}).filter(function (filename) {
-		return excludes.indexOf(filename) === -1
-			&& !/(?:^|\/|\\)tests(?:\/|\\)/.test(filename)
-			&& !/(?:^|\/|\\)node_modules(?:\/|\\)/.test(filename);
-	}).map(function (filename) {
-		return pathUtil.join(baseDir, filename);
+function getFilenames(baseDir: string, files:string[]): string[] {
+	return files.map(function (filename) {
+		return pathUtil.resolve(baseDir, filename);
 	});
 }
 
@@ -112,7 +108,11 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 		target: target
 	};
 
-	var filenames = getFilenames(baseDir, options.excludes);
+	var filenames = getFilenames(baseDir, options.files);
+	var excludesMap: { [filename: string]: boolean; } = {};
+	options.excludes && options.excludes.forEach(function (filename) {
+		excludesMap[pathUtil.resolve(baseDir, filename)] = true;
+	});
 
 	mkdirp.sync(pathUtil.dirname(options.out));
 	var output = fs.createWriteStream(options.out, { mode: parseInt('644', 8) });
@@ -148,6 +148,10 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 			// Source file is a default library, or other dependency from another project, that should not be included in
 			// our bundled output
 			if (sourceFile.filename.indexOf(baseDir) !== 0) {
+				return;
+			}
+
+			if (excludesMap[sourceFile.filename]) {
 				return;
 			}
 
