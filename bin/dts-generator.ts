@@ -53,7 +53,7 @@ if (kwArgs.files.length === 0) {
 console.log('Starting');
 dts.generate(<any> kwArgs, console.log.bind(console)).then(function () {
 	console.log('Done!');
-}, function (error: dts.EmitterError) {
+}, function (error: Error) {
 	console.error(error);
-	process.exit(error.status || 1);
+	process.exit(1);
 });
