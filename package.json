@@ -1,7 +1,7 @@
 {
   "name": "dts-generator",
   "description": ".d.ts generator. Generates a single d.ts bundle containing external modules from TypeScript files.",
-  "version": "1.1.2-pre",
+  "version": "1.1.2",
   "bugs": {
     "url": "https://github.com/SitePen/dts-generator/issues"
   },
