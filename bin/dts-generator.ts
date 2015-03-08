@@ -34,7 +34,7 @@ for (var i = 2, j = process.argv.length; i < j; ++i) {
 		}
 	}
 	else {
-		kwArgs.files.push(value);
+		kwArgs.files.push(process.argv[i]);
 	}
 }
 
