@@ -59,6 +59,11 @@ function getError(status: ts.EmitReturnStatus, diagnostics: ts.Diagnostic[]) {
 
 function getFilenames(baseDir: string, files:string[]): string[] {
 	return files.map(function (filename) {
+		var resolvedFilename = pathUtil.resolve(filename);
+		if (resolvedFilename.indexOf(baseDir) === 0) {
+			return resolvedFilename;
+		}
+
 		return pathUtil.resolve(baseDir, filename);
 	});
 }
