@@ -17,7 +17,7 @@
     "bluebird": "2.9.4",
     "glob": "4.3.2",
     "mkdirp": "0.5.0",
-    "typescript": "Arnavion/typescript-github#2015-03-05-b784a4212aeb5a4e42a598a8613a0538ac241123"
+    "typescript": "Arnavion/typescript-github#2015-03-18-3e7e9f43ca9b508b33752f747c82da7cad0353e3"
   },
   "devDependencies": {
     "tsd": "0.5.7"
