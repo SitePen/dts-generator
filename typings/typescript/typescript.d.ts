@@ -224,27 +224,28 @@ declare module "typescript" {
         EnumDeclaration = 199,
         ModuleDeclaration = 200,
         ModuleBlock = 201,
-        ImportEqualsDeclaration = 202,
-        ImportDeclaration = 203,
-        ImportClause = 204,
-        NamespaceImport = 205,
-        NamedImports = 206,
-        ImportSpecifier = 207,
-        ExportAssignment = 208,
-        ExportDeclaration = 209,
-        NamedExports = 210,
-        ExportSpecifier = 211,
-        ExternalModuleReference = 212,
-        CaseClause = 213,
-        DefaultClause = 214,
-        HeritageClause = 215,
-        CatchClause = 216,
-        PropertyAssignment = 217,
-        ShorthandPropertyAssignment = 218,
-        EnumMember = 219,
-        SourceFile = 220,
-        SyntaxList = 221,
-        Count = 222,
+        CaseBlock = 202,
+        ImportEqualsDeclaration = 203,
+        ImportDeclaration = 204,
+        ImportClause = 205,
+        NamespaceImport = 206,
+        NamedImports = 207,
+        ImportSpecifier = 208,
+        ExportAssignment = 209,
+        ExportDeclaration = 210,
+        NamedExports = 211,
+        ExportSpecifier = 212,
+        ExternalModuleReference = 213,
+        CaseClause = 214,
+        DefaultClause = 215,
+        HeritageClause = 216,
+        CatchClause = 217,
+        PropertyAssignment = 218,
+        ShorthandPropertyAssignment = 219,
+        EnumMember = 220,
+        SourceFile = 221,
+        SyntaxList = 222,
+        Count = 223,
         FirstAssignment = 52,
         LastAssignment = 63,
         FirstReservedWord = 65,
@@ -276,15 +277,16 @@ declare module "typescript" {
         Private = 32,
         Protected = 64,
         Static = 128,
-        MultiLine = 256,
-        Synthetic = 512,
-        DeclarationFile = 1024,
-        Let = 2048,
-        Const = 4096,
-        OctalLiteral = 8192,
-        Modifier = 243,
+        Default = 256,
+        MultiLine = 512,
+        Synthetic = 1024,
+        DeclarationFile = 2048,
+        Let = 4096,
+        Const = 8192,
+        OctalLiteral = 16384,
+        Modifier = 499,
         AccessibilityModifier = 112,
-        BlockScoped = 6144,
+        BlockScoped = 12288,
     }
     const enum ParserContextFlags {
         StrictMode = 1,
@@ -412,7 +414,7 @@ declare module "typescript" {
         body?: Block | Expression;
     }
     interface FunctionDeclaration extends FunctionLikeDeclaration, Statement {
-        name: Identifier;
+        name?: Identifier;
         body?: Block;
     }
     interface MethodDeclaration extends FunctionLikeDeclaration, ClassElement, ObjectLiteralElement {
@@ -505,12 +507,17 @@ declare module "typescript" {
     }
     interface ConditionalExpression extends Expression {
         condition: Expression;
+        questionToken: Node;
         whenTrue: Expression;
+        colonToken: Node;
         whenFalse: Expression;
     }
     interface FunctionExpression extends PrimaryExpression, FunctionLikeDeclaration {
         name?: Identifier;
         body: Block | Expression;
+    }
+    interface ArrowFunction extends Expression, FunctionLikeDeclaration {
+        equalsGreaterThanToken: Node;
     }
     interface LiteralExpression extends PrimaryExpression {
         text: string;
@@ -542,6 +549,7 @@ declare module "typescript" {
     }
     interface PropertyAccessExpression extends MemberExpression {
         expression: LeftHandSideExpression;
+        dotToken: Node;
         name: Identifier;
     }
     interface ElementAccessExpression extends MemberExpression {
@@ -615,6 +623,9 @@ declare module "typescript" {
     }
     interface SwitchStatement extends Statement {
         expression: Expression;
+        caseBlock: CaseBlock;
+    }
+    interface CaseBlock extends Node {
         clauses: NodeArray<CaseOrDefaultClause>;
     }
     interface CaseClause extends Node {
@@ -645,7 +656,7 @@ declare module "typescript" {
         _moduleElementBrand: any;
     }
     interface ClassDeclaration extends Declaration, ModuleElement {
-        name: Identifier;
+        name?: Identifier;
         typeParameters?: NodeArray<TypeParameterDeclaration>;
         heritageClauses?: NodeArray<HeritageClause>;
         members: NodeArray<ClassElement>;
@@ -675,10 +686,7 @@ declare module "typescript" {
         name: Identifier;
         members: NodeArray<EnumMember>;
     }
-    interface ExportContainer {
-        exportStars?: ExportDeclaration[];
-    }
-    interface ModuleDeclaration extends Declaration, ModuleElement, ExportContainer {
+    interface ModuleDeclaration extends Declaration, ModuleElement {
         name: Identifier | LiteralExpression;
         body: ModuleBlock | ModuleDeclaration;
     }
@@ -703,7 +711,7 @@ declare module "typescript" {
     interface NamespaceImport extends Declaration {
         name: Identifier;
     }
-    interface ExportDeclaration extends Statement, ModuleElement {
+    interface ExportDeclaration extends Declaration, ModuleElement {
         exportClause?: NamedExports;
         moduleSpecifier?: Expression;
     }
@@ -718,8 +726,10 @@ declare module "typescript" {
     }
     type ImportSpecifier = ImportOrExportSpecifier;
     type ExportSpecifier = ImportOrExportSpecifier;
-    interface ExportAssignment extends Statement, ModuleElement {
-        exportName: Identifier;
+    interface ExportAssignment extends Declaration, ModuleElement {
+        isExportEquals?: boolean;
+        expression?: Expression;
+        type?: TypeNode;
     }
     interface FileReference extends TextRange {
         fileName: string;
@@ -727,7 +737,7 @@ declare module "typescript" {
     interface CommentRange extends TextRange {
         hasTrailingNewLine?: boolean;
     }
-    interface SourceFile extends Declaration, ExportContainer {
+    interface SourceFile extends Declaration {
         statements: NodeArray<ModuleElement>;
         endOfFileToken: Node;
         fileName: string;
@@ -880,9 +890,10 @@ declare module "typescript" {
         NotAccessible = 1,
         CannotBeNamed = 2,
     }
+    type AnyImportSyntax = ImportDeclaration | ImportEqualsDeclaration;
     interface SymbolVisibilityResult {
         accessibility: SymbolAccessibility;
-        aliasesToMakeVisible?: ImportEqualsDeclaration[];
+        aliasesToMakeVisible?: AnyImportSyntax[];
         errorSymbolName?: string;
         errorNode?: Node;
     }
@@ -890,16 +901,18 @@ declare module "typescript" {
         errorModuleName?: string;
     }
     interface EmitResolver {
-        getGeneratedNameForNode(node: ModuleDeclaration | EnumDeclaration | ImportDeclaration | ExportDeclaration): string;
+        getGeneratedNameForNode(node: Node): string;
         getExpressionNameSubstitution(node: Identifier): string;
-        getExportAssignmentName(node: SourceFile): string;
-        isReferencedImportDeclaration(node: Node): boolean;
+        hasExportDefaultValue(node: SourceFile): boolean;
+        isReferencedAliasDeclaration(node: Node): boolean;
         isTopLevelValueImportEqualsWithEntityName(node: ImportEqualsDeclaration): boolean;
         getNodeCheckFlags(node: Node): NodeCheckFlags;
         isDeclarationVisible(node: Declaration): boolean;
+        collectLinkedAliases(node: Identifier): Node[];
         isImplementationOfOverload(node: FunctionLikeDeclaration): boolean;
         writeTypeOfDeclaration(declaration: AccessorDeclaration | VariableLikeDeclaration, enclosingDeclaration: Node, flags: TypeFormatFlags, writer: SymbolWriter): void;
         writeReturnTypeOfSignatureDeclaration(signatureDeclaration: SignatureDeclaration, enclosingDeclaration: Node, flags: TypeFormatFlags, writer: SymbolWriter): void;
+        writeTypeOfExpression(expr: Expression, enclosingDeclaration: Node, flags: TypeFormatFlags, writer: SymbolWriter): void;
         isSymbolAccessible(symbol: Symbol, enclosingDeclaration: Node, meaning: SymbolFlags): SymbolAccessiblityResult;
         isEntityNameVisible(entityName: EntityName, enclosingDeclaration: Node): SymbolVisibilityResult;
         getConstantValue(node: EnumMember | PropertyAccessExpression | ElementAccessExpression): number;
@@ -930,13 +943,14 @@ declare module "typescript" {
         ExportValue = 1048576,
         ExportType = 2097152,
         ExportNamespace = 4194304,
-        Import = 8388608,
+        Alias = 8388608,
         Instantiated = 16777216,
         Merged = 33554432,
         Transient = 67108864,
         Prototype = 134217728,
         UnionProperty = 268435456,
         Optional = 536870912,
+        ExportStar = 1073741824,
         Enum = 384,
         Variable = 3,
         Value = 107455,
@@ -961,7 +975,7 @@ declare module "typescript" {
         SetAccessorExcludes = 74687,
         TypeParameterExcludes = 530912,
         TypeAliasExcludes = 793056,
-        ImportExcludes = 8388608,
+        AliasExcludes = 8388608,
         ModuleMember = 8914931,
         ExportHasLocal = 944,
         HasLocals = 255504,
@@ -990,10 +1004,9 @@ declare module "typescript" {
         declaredType?: Type;
         mapper?: TypeMapper;
         referenced?: boolean;
-        exportAssignmentChecked?: boolean;
-        exportAssignmentSymbol?: Symbol;
         unionType?: UnionType;
         resolvedExports?: SymbolTable;
+        exportsChecked?: boolean;
     }
     interface TransientSymbol extends Symbol, SymbolLinks {
     }
@@ -1129,17 +1142,6 @@ declare module "typescript" {
     interface TypeMapper {
         (t: Type): Type;
     }
-    interface TypeInferences {
-        primary: Type[];
-        secondary: Type[];
-    }
-    interface InferenceContext {
-        typeParameters: TypeParameter[];
-        inferUnionTypes: boolean;
-        inferences: TypeInferences[];
-        inferredTypes: Type[];
-        failedTypeParameterIndex?: number;
-    }
     interface DiagnosticMessage {
         key: string;
         category: DiagnosticCategory;
@@ -1194,7 +1196,6 @@ declare module "typescript" {
         target?: ScriptTarget;
         version?: boolean;
         watch?: boolean;
-        stripInternal?: boolean;
         [option: string]: string | number | boolean;
     }
     const enum ModuleKind {
@@ -1435,13 +1436,16 @@ declare module "typescript" {
     function createTypeChecker(host: TypeCheckerHost, produceDiagnostics: boolean): TypeChecker;
 }
 declare module "typescript" {
-    function createCompilerHost(options: CompilerOptions): CompilerHost;
+    /** The version of the TypeScript compiler release */
+    let version: string;
+    function createCompilerHost(options: CompilerOptions, setParentNodes?: boolean): CompilerHost;
     function getPreEmitDiagnostics(program: Program): Diagnostic[];
     function flattenDiagnosticMessageText(messageText: string | DiagnosticMessageChain, newLine: string): string;
     function createProgram(rootNames: string[], options: CompilerOptions, host?: CompilerHost): Program;
 }
 declare module "typescript" {
-    var servicesVersion: string;
+    /** The version of the language service API */
+    let servicesVersion: string;
     interface Node {
         getSourceFile(): SourceFile;
         getChildCount(sourceFile?: SourceFile): number;
@@ -1928,7 +1932,7 @@ declare module "typescript" {
         throwIfCancellationRequested(): void;
     }
     function createLanguageServiceSourceFile(fileName: string, scriptSnapshot: IScriptSnapshot, scriptTarget: ScriptTarget, version: string, setNodeParents: boolean): SourceFile;
-    var disableIncrementalParsing: boolean;
+    let disableIncrementalParsing: boolean;
     function updateLanguageServiceSourceFile(sourceFile: SourceFile, scriptSnapshot: IScriptSnapshot, version: string, textChangeRange: TextChangeRange, aggressiveChecks?: boolean): SourceFile;
     function createDocumentRegistry(): DocumentRegistry;
     function preProcessFile(sourceText: string, readImportFiles?: boolean): PreProcessedFileInfo;
