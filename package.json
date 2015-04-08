@@ -17,12 +17,12 @@
     "bluebird": "2.9.4",
     "glob": "4.3.2",
     "mkdirp": "0.5.0",
-    "typescript": "Arnavion/typescript-github#2015-03-18-3e7e9f43ca9b508b33752f747c82da7cad0353e3"
+    "typescript": "1.5.0-alpha"
   },
   "devDependencies": {
     "tsd": "0.5.7"
   },
   "scripts": {
-    "install": "node -e \"require('child_process').exec(require.resolve('typescript/bin/tsc') + ' -m commonjs -t es5 bin/dts-generator.ts index.ts', function(error, stdout, stderr){stdout&&process.stdout.write(stdout);stderr&&process.stderr.write(stderr);if(error)process.exit(1);})\""
+    "prepublish": "tsc -m commonjs -t es5 typings/tsd.d.ts index.ts bin/dts-generator.ts"
   }
 }
