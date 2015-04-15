@@ -15,7 +15,7 @@ JavaScript that users can simply reference from the TypeScript compiler using a 
 
 ## Usage
 
-1. `npm install SitePen/dts-generator`
+1. `npm install dts-generator`
 
 2. Generate your d.ts bundle:
 
