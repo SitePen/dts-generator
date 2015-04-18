@@ -36,6 +36,26 @@ require('dts-generator').generate({
 dts-generator --name package-name --baseDir /path/to/package-directory --out package-name.d.ts a.ts b.ts ...
 ```
 
+   Grunt:
+
+   ```js
+module.exports = function (grunt) {
+	grunt.loadNpmTasks('dts-generator');
+	grunt.initConfig({
+		dtsGenerator: {
+			options: {
+				name: 'package-name',
+				baseDir: '/path/to/package-directory',
+				out: 'package-name.d.ts'
+			},
+			default: {
+				src: [ '/path/to/package-directory/**/*.ts' ]
+			}
+		}
+	});
+};
+```
+
 3. Reference your generated d.ts bundle from somewhere in your consumer module and import away!:
 
    ```ts
