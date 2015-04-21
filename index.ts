@@ -196,7 +196,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 					var expression = <ts.LiteralExpression> (<ts.ExternalModuleReference> node).expression;
 
 					if (expression.text.charAt(0) === '.') {
-						return ' require(\'' + pathUtil.join(pathUtil.dirname(sourceModuleId), expression.text) + '\')';
+						return ' require(\'' + filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), expression.text)) + '\')';
 					}
 				}
 				else if (node.kind === ts.SyntaxKind.DeclareKeyword) {
@@ -208,7 +208,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 				) {
 					var text = (<ts.StringLiteralTypeNode> node).text;
 					if (text.charAt(0) === '.') {
-						return ` '${pathUtil.join(pathUtil.dirname(sourceModuleId), text)}'`;
+						return ` '${filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), text))}'`;
 					}
 				}
 			});
