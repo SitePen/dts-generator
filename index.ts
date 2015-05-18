@@ -161,7 +161,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 			}
 
 			var emitOutput = program.emit(sourceFile, writeFile);
-			if (emitOutput.emitSkipped) {
+			if (emitOutput.emitSkipped || emitOutput.diagnostics.length > 0) {
 				reject(getError(
 					emitOutput.diagnostics
 						.concat(program.getSemanticDiagnostics(sourceFile))
