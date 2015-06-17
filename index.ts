@@ -111,7 +111,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 	var filenames = getFilenames(baseDir, options.files);
 	var excludesMap: { [filename: string]: boolean; } = {};
 	options.excludes && options.excludes.forEach(function (filename) {
-		excludesMap[pathUtil.resolve(baseDir, filename)] = true;
+		excludesMap[filenameToMid(pathUtil.resolve(baseDir, filename))] = true;
 	});
 
 	mkdirp.sync(pathUtil.dirname(options.out));
@@ -148,7 +148,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 				return;
 			}
 
-			if (excludesMap[sourceFile.fileName]) {
+			if (excludesMap[filenameToMid(pathUtil.normalize(sourceFile.fileName))]) {
 				return;
 			}
 
