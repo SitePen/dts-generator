@@ -19,6 +19,7 @@ interface Options {
 	main?: string;
 	name: string;
 	out: string;
+	outDir?: string;
 	target?: ts.ScriptTarget;
 }
 
@@ -107,6 +108,9 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 		module: ts.ModuleKind.CommonJS,
 		target: target
 	};
+	if (options.outDir) {
+		compilerOptions.outDir = options.outDir
+	}
 
 	var filenames = getFilenames(baseDir, options.files);
 	var excludesMap: { [filename: string]: boolean; } = {};
