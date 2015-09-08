@@ -1,23 +1,23 @@
 .d.ts generator
 ===============
 
-Generates a single .d.ts bundle containing external module declarations generated from TypeScript files.
+Generates a single `.d.ts` bundle containing external module declarations exported from TypeScript module files.
 
 ## What does this mean?
 
 If you have a project with lots of individual TypeScript files that are designed to be consumed as external modules,
 the TypeScript compiler doesn’t allow you to actually create a single bundle out of them. This package leverages the
-TypeScript language services in TypeScript 1.4+ to generate a single .d.ts file containing multiple
-`declare module 'foo'` declarations. This allows you to distribute a single .d.ts file along with your compiled
+TypeScript language services in TypeScript 1.4+ to generate a single `.d.ts` file containing multiple
+`declare module 'foo'` declarations. This allows you to distribute a single `.d.ts` file along with your compiled
 JavaScript that users can simply reference from the TypeScript compiler using a `/// <reference path />` comment.
 
-.d.ts generator will also correctly merge non-external-module files, and any already-existing .d.ts files.
+`.d.ts` generator will also correctly merge non-external-module files, and any already-existing `.d.ts` files.
 
 ## Usage
 
 1. `npm install dts-generator`
 
-2. Generate your d.ts bundle:
+2. Generate your `d.ts` bundle:
 
    Programmatically:
 
@@ -25,7 +25,7 @@ JavaScript that users can simply reference from the TypeScript compiler using a 
 require('dts-generator').generate({
 	name: 'package-name',
 	baseDir: '/path/to/package-directory',
-  files: [ 'a.ts', 'b.ts', ... ]
+	files: [ 'a.ts', 'b.ts', ... ],
 	out: 'package-name.d.ts'
 });
 ```
@@ -88,7 +88,7 @@ import Foo = require('package-name/Foo');
 
 ## Thanks
 
-@fdecampredon for the idea to dump output from the compiler emitter back into the compiler parser instead of trying to
+[@fdecampredon](https://github.com/fdecampredon) for the idea to dump output from the compiler emitter back into the compiler parser instead of trying to
 figure out how to influence the code emitter.
 
 ## Licensing
