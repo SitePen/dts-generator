@@ -23,10 +23,10 @@ JavaScript that users can simply reference from the TypeScript compiler using a 
 
    ```js
 require('dts-generator').generate({
-	name: 'package-name',
-	baseDir: '/path/to/package-directory',
-	files: [ 'a.ts', 'b.ts', ... ],
-	out: 'package-name.d.ts'
+		name: 'package-name',
+		baseDir: '/path/to/package-directory',
+		files: [ 'a.ts', 'b.ts', ... ],
+		out: 'package-name.d.ts'
 });
 ```
 
