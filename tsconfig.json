@@ -1,13 +1,28 @@
 {
+    "version": "1.6.0",
     "compilerOptions": {
         "target": "es5",
-        "module": "commonjs",
+        "module": "umd",
         "declaration": false,
         "noImplicitAny": true
     },
+    "filesGlob": [
+        "./*.ts",
+        "./bin/**/*.ts",
+        "./tests/**/*.ts",
+        "./typings/tsd.d.ts",
+        "./node_modules/typescript/lib/typescript.d.ts"
+    ],
     "files": [
-        "./bin/dts-generator.ts",
         "./index.ts",
-        "./typings/tsd.d.ts"
+        "./bin/dts-generator.ts",
+        "./tests/intern.ts",
+        "./tests/support/foo/Bar.ts",
+        "./tests/support/foo/index.ts",
+        "./tests/typings/dts-generator/dts-generator.d.ts",
+        "./tests/unit/all.ts",
+        "./tests/unit/index.ts",
+        "./typings/tsd.d.ts",
+        "./node_modules/typescript/lib/typescript.d.ts"
     ]
 }

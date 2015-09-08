@@ -1,12 +1,15 @@
-/// <reference path="./typings/tsd" />
+import * as fs from 'fs';
+import * as glob from 'glob';
+import * as mkdirp from 'mkdirp';
+import * as os from 'os';
+import * as pathUtil from 'path';
+import * as Promise from 'bluebird';
+import * as ts from 'typescript';
 
-import fs = require('fs');
-import glob = require('glob');
-import mkdirp = require('mkdirp');
-import os = require('os');
-import pathUtil = require('path');
-import Promise = require('bluebird');
-import ts = require('typescript');
+/* This node type appears to not be available in 1.6-beta, so "recreating" */
+interface StringLiteralTypeNode extends ts.TypeNode {
+	text: string;
+}
 
 interface Options {
 	baseDir: string;
@@ -109,7 +112,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 		target: target
 	};
 	if (options.outDir) {
-		compilerOptions.outDir = options.outDir
+		compilerOptions.outDir = options.outDir;
 	}
 
 	var filenames = getFilenames(baseDir, options.files);
@@ -119,11 +122,12 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 	});
 
 	mkdirp.sync(pathUtil.dirname(options.out));
-	var output = fs.createWriteStream(options.out, { mode: parseInt('644', 8) });
+	/* node.js typings are missing the optional mode in createWriteStream options and therefore
+	 * in TS 1.6 the strict object literal checking is throwing, therefore a hammer to the nut */
+	var output = (<any> fs).createWriteStream(options.out, { mode: parseInt('644', 8) });
 
 	var host = ts.createCompilerHost(compilerOptions);
 	var program = ts.createProgram(filenames, compilerOptions, host);
-	var checker = ts.createTypeChecker(program, true);
 
 	function writeFile(filename: string, data: string, writeByteOrderMark: boolean) {
 		// Compiler is emitting the non-declaration file, which we do not care about
@@ -192,7 +196,9 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 		var filename = declarationFile.fileName;
 		var sourceModuleId = options.name + filenameToMid(filename.slice(baseDir.length, -5));
 
-		if (declarationFile.externalModuleIndicator) {
+		/* For some reason, SourceFile.externalModuleIndicator is missing from 1.6-beta, so having
+		 * to use a sledgehammer on the nut */
+		if ((<any> declarationFile).externalModuleIndicator) {
 			output.write('declare module \'' + sourceModuleId + '\' {' + eol + indent);
 
 			var content = processTree(declarationFile, function (node) {
@@ -210,7 +216,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 					node.kind === ts.SyntaxKind.StringLiteral &&
 					(node.parent.kind === ts.SyntaxKind.ExportDeclaration || node.parent.kind === ts.SyntaxKind.ImportDeclaration)
 				) {
-					var text = (<ts.StringLiteralTypeNode> node).text;
+					var text = (<StringLiteralTypeNode> node).text;
 					if (text.charAt(0) === '.') {
 						return ` '${filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), text))}'`;
 					}
