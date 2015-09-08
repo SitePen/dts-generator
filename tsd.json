@@ -5,17 +5,11 @@
   "path": "typings",
   "bundle": "typings/tsd.d.ts",
   "installed": {
-    "node/node.d.ts": {
-      "commit": "0605ebbdbdd8183c70b4a14e1e34ecb3f2b446bf"
-    },
     "glob/glob.d.ts": {
       "commit": "0605ebbdbdd8183c70b4a14e1e34ecb3f2b446bf"
     },
     "minimatch/minimatch.d.ts": {
       "commit": "0605ebbdbdd8183c70b4a14e1e34ecb3f2b446bf"
-    },
-    "typescript/typescript.d.ts": {
-      "commit": "4f0eec65afc75001ef6ce2af5734f5dfc1b5568d"
     },
     "bluebird/bluebird.d.ts": {
       "commit": "7bab855ae33d79e86da1eb6c73a7f7eab2676ddb"

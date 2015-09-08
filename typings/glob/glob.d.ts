@@ -3,7 +3,7 @@
 // Definitions by: vvakame <https://github.com/vvakame/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
-/// <reference path="../node/node.d.ts" />
+/// <reference path="../../node_modules/intern/typings/node/node.d.ts"/>
 /// <reference path="../minimatch/minimatch.d.ts" />
 
 declare module "glob" {
