@@ -17,6 +17,7 @@
         "./index.ts",
         "./bin/dts-generator.ts",
         "./tests/intern.ts",
+        "./tests/support/abstract/abstract.ts",
         "./tests/support/foo/Bar.ts",
         "./tests/support/foo/index.ts",
         "./tests/typings/dts-generator/dts-generator.d.ts",
