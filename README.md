@@ -1,6 +1,8 @@
 .d.ts generator
 ===============
 
+[![Build Status](https://travis-ci.org/SitePen/dts-generator.svg?branch=master)](https://travis-ci.org/SitePen/dts-generator)
+
 Generates a single `.d.ts` bundle containing external module declarations exported from TypeScript module files.
 
 ## What does this mean?
