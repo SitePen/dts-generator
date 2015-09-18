@@ -72,8 +72,8 @@ import Foo = require('package-name/Foo');
 
 * `baseDir: string`: The base directory for the package being bundled. Any dependencies discovered outside this
   directory will be excluded from the bundle.
-* `excludes?: string[]`: A list of files, relative to `baseDir`, that should be excluded from the bundle. Use the
-  `--exclude` flag one or more times on the command-line.
+* `excludes?: string[]`: A list of glob patterns, relative to `baseDir`, that should be excluded from the bundle. Use
+  the `--exclude` flag one or more times on the command-line. Defaults to `[ "node_modules/**/*.d.ts" ]`.
 * `externs?: string[]`: A list of external module reference paths that should be inserted as reference comments. Use
   the `--extern` flag one or more times on the command-line.
 * `files: string[]`: A list of files from the baseDir to bundle.

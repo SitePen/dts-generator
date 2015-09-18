@@ -117,8 +117,13 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 
 	var filenames = getFilenames(baseDir, options.files);
 	var excludesMap: { [filename: string]: boolean; } = {};
+
+	options.excludes = options.excludes || [ "node_modules/**/*.d.ts" ];
+
 	options.excludes && options.excludes.forEach(function (filename) {
-		excludesMap[filenameToMid(pathUtil.resolve(baseDir, filename))] = true;
+		glob.sync(filename).forEach(function(globFileName) {
+			excludesMap[filenameToMid(pathUtil.resolve(baseDir, globFileName))] = true;
+		});
 	});
 
 	mkdirp.sync(pathUtil.dirname(options.out));
