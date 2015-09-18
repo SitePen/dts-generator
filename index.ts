@@ -4,7 +4,7 @@ import * as mkdirp from 'mkdirp';
 import * as os from 'os';
 import * as pathUtil from 'path';
 import * as Promise from 'bluebird';
-import * as ts from 'typescript';
+import * as ts from './node_modules/typescript/lib/typescript';
 
 /* This node type appears to not be available in 1.6-beta, so "recreating" */
 interface StringLiteralTypeNode extends ts.TypeNode {

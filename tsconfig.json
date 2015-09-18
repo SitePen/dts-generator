@@ -11,7 +11,8 @@
         "./bin/**/*.ts",
         "./tests/**/*.ts",
         "./typings/tsd.d.ts",
-        "./node_modules/typescript/lib/typescript.d.ts"
+        "./node_modules/typescript/lib/typescript.d.ts",
+        "./node_modules/typescript/lib/typescript.ts"
     ],
     "files": [
         "./index.ts",
