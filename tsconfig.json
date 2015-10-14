@@ -4,7 +4,8 @@
         "target": "es5",
         "module": "umd",
         "declaration": false,
-        "noImplicitAny": true
+        "noImplicitAny": true,
+        "moduleResolution": "node"
     },
     "filesGlob": [
         "./*.ts",
