@@ -26,7 +26,7 @@ interface Options {
 	target?: ts.ScriptTarget;
 }
 
-const filenameToMid:(filename: string) => string = (function () {
+const filenameToMid: (filename: string) => string = (function () {
 	if (pathUtil.sep === '/') {
 		return function (filename: string) {
 			return filename;
@@ -56,7 +56,7 @@ function getError(diagnostics: ts.Diagnostic[]) {
 	return error;
 }
 
-function getFilenames(baseDir: string, files:string[]): string[] {
+function getFilenames(baseDir: string, files: string[]): string[] {
 	return files.map(function (filename) {
 		const resolvedFilename = pathUtil.resolve(filename);
 		if (resolvedFilename.indexOf(baseDir) === 0) {
@@ -67,7 +67,7 @@ function getFilenames(baseDir: string, files:string[]): string[] {
 	});
 }
 
-function processTree(sourceFile: ts.SourceFile, replacer:(node: ts.Node) => string): string {
+function processTree(sourceFile: ts.SourceFile, replacer: (node: ts.Node) => string): string {
 	let code = '';
 	let cursorPosition = 0;
 
