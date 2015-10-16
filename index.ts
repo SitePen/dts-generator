@@ -26,14 +26,14 @@ interface Options {
 	target?: ts.ScriptTarget;
 }
 
-var filenameToMid:(filename: string) => string = (function () {
+const filenameToMid:(filename: string) => string = (function () {
 	if (pathUtil.sep === '/') {
 		return function (filename: string) {
 			return filename;
 		};
 	}
 	else {
-		var separatorExpression = new RegExp(pathUtil.sep.replace('\\', '\\\\'), 'g');
+		const separatorExpression = new RegExp(pathUtil.sep.replace('\\', '\\\\'), 'g');
 		return function (filename: string) {
 			return filename.replace(separatorExpression, '/');
 		};
@@ -41,24 +41,24 @@ var filenameToMid:(filename: string) => string = (function () {
 })();
 
 function getError(diagnostics: ts.Diagnostic[]) {
-	var message = 'Declaration generation failed';
+	let message = 'Declaration generation failed';
 
 	diagnostics.forEach(function (diagnostic) {
-		var position = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+		const position = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
 
 		message +=
 			`\n${diagnostic.file.fileName}(${position.line + 1},${position.character + 1}): ` +
 			`error TS${diagnostic.code}: ${diagnostic.messageText}`;
 	});
 
-	var error = new Error(message);
+	const error = new Error(message);
 	error.name = 'EmitterError';
 	return error;
 }
 
 function getFilenames(baseDir: string, files:string[]): string[] {
 	return files.map(function (filename) {
-		var resolvedFilename = pathUtil.resolve(filename);
+		const resolvedFilename = pathUtil.resolve(filename);
 		if (resolvedFilename.indexOf(baseDir) === 0) {
 			return resolvedFilename;
 		}
@@ -68,8 +68,8 @@ function getFilenames(baseDir: string, files:string[]): string[] {
 }
 
 function processTree(sourceFile: ts.SourceFile, replacer:(node: ts.Node) => string): string {
-	var code = '';
-	var cursorPosition = 0;
+	let code = '';
+	let cursorPosition = 0;
 
 	function skip(node: ts.Node) {
 		cursorPosition = node.end;
@@ -83,7 +83,7 @@ function processTree(sourceFile: ts.SourceFile, replacer:(node: ts.Node) => stri
 	function visit(node: ts.Node) {
 		readThrough(node);
 
-		var replacement = replacer(node);
+		const replacement = replacer(node);
 
 		if (replacement != null) {
 			code += replacement;
@@ -101,12 +101,12 @@ function processTree(sourceFile: ts.SourceFile, replacer:(node: ts.Node) => stri
 }
 
 export function generate(options: Options, sendMessage: (message: string) => void = function () {}) {
-	var baseDir = pathUtil.resolve(options.baseDir);
-	var eol = options.eol || os.EOL;
-	var nonEmptyLineStart = new RegExp(eol + '(?!' + eol + '|$)', 'g');
-	var indent = options.indent === undefined ? '\t' : options.indent;
-	var target = options.target || ts.ScriptTarget.Latest;
-	var compilerOptions: ts.CompilerOptions = {
+	const baseDir = pathUtil.resolve(options.baseDir);
+	const eol = options.eol || os.EOL;
+	const nonEmptyLineStart = new RegExp(eol + '(?!' + eol + '|$)', 'g');
+	const indent = options.indent === undefined ? '\t' : options.indent;
+	const target = options.target || ts.ScriptTarget.Latest;
+	const compilerOptions: ts.CompilerOptions = {
 		declaration: true,
 		module: ts.ModuleKind.CommonJS,
 		target: target
@@ -115,10 +115,10 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 		compilerOptions.outDir = options.outDir;
 	}
 
-	var filenames = getFilenames(baseDir, options.files);
-	var excludesMap: { [filename: string]: boolean; } = {};
+	const filenames = getFilenames(baseDir, options.files);
+	const excludesMap: { [filename: string]: boolean; } = {};
 
-	options.excludes = options.excludes || [ "node_modules/**/*.d.ts" ];
+	options.excludes = options.excludes || [ 'node_modules/**/*.d.ts' ];
 
 	options.excludes && options.excludes.forEach(function (filename) {
 		glob.sync(filename).forEach(function(globFileName) {
@@ -129,10 +129,10 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 	mkdirp.sync(pathUtil.dirname(options.out));
 	/* node.js typings are missing the optional mode in createWriteStream options and therefore
 	 * in TS 1.6 the strict object literal checking is throwing, therefore a hammer to the nut */
-	var output = (<any> fs).createWriteStream(options.out, { mode: parseInt('644', 8) });
+	const output = (<any> fs).createWriteStream(options.out, { mode: parseInt('644', 8) });
 
-	var host = ts.createCompilerHost(compilerOptions);
-	var program = ts.createProgram(filenames, compilerOptions, host);
+	const host = ts.createCompilerHost(compilerOptions);
+	const program = ts.createProgram(filenames, compilerOptions, host);
 
 	function writeFile(filename: string, data: string, writeByteOrderMark: boolean) {
 		// Compiler is emitting the non-declaration file, which we do not care about
@@ -173,7 +173,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 				return;
 			}
 
-			var emitOutput = program.emit(sourceFile, writeFile);
+			const emitOutput = program.emit(sourceFile, writeFile);
 			if (emitOutput.emitSkipped || emitOutput.diagnostics.length > 0) {
 				reject(getError(
 					emitOutput.diagnostics
@@ -198,17 +198,17 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 	});
 
 	function writeDeclaration(declarationFile: ts.SourceFile) {
-		var filename = declarationFile.fileName;
-		var sourceModuleId = options.name + filenameToMid(filename.slice(baseDir.length, -5));
+		const filename = declarationFile.fileName;
+		const sourceModuleId = options.name + filenameToMid(filename.slice(baseDir.length, -5));
 
 		/* For some reason, SourceFile.externalModuleIndicator is missing from 1.6-beta, so having
 		 * to use a sledgehammer on the nut */
 		if ((<any> declarationFile).externalModuleIndicator) {
 			output.write('declare module \'' + sourceModuleId + '\' {' + eol + indent);
 
-			var content = processTree(declarationFile, function (node) {
+			const content = processTree(declarationFile, function (node) {
 				if (node.kind === ts.SyntaxKind.ExternalModuleReference) {
-					var expression = <ts.LiteralExpression> (<ts.ExternalModuleReference> node).expression;
+					const expression = <ts.LiteralExpression> (<ts.ExternalModuleReference> node).expression;
 
 					if (expression.text.charAt(0) === '.') {
 						return ' require(\'' + filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), expression.text)) + '\')';
@@ -221,7 +221,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 					node.kind === ts.SyntaxKind.StringLiteral &&
 					(node.parent.kind === ts.SyntaxKind.ExportDeclaration || node.parent.kind === ts.SyntaxKind.ImportDeclaration)
 				) {
-					var text = (<StringLiteralTypeNode> node).text;
+					const text = (<StringLiteralTypeNode> node).text;
 					if (text.charAt(0) === '.') {
 						return ` '${filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), text))}'`;
 					}

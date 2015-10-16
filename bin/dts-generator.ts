@@ -1,18 +1,18 @@
 import dts = require('../index');
 
-var kwArgs:{
+const kwArgs: {
 	[key: string]: any;
 	excludes?: string[];
 	externs?: string[];
 	files: string[];
 } = { files: [] };
 
-for (var i = 2, j = process.argv.length; i < j; ++i) {
-	var arg = process.argv[i];
+for (let i = 2, j = process.argv.length; i < j; ++i) {
+	const arg = process.argv[i];
 
 	if (arg.charAt(0) === '-') {
-		var key = process.argv[i].replace(/^-+/, '');
-		var value = process.argv[i + 1];
+		const key = process.argv[i].replace(/^-+/, '');
+		const value = process.argv[i + 1];
 		++i;
 
 		if (key === 'exclude') {
