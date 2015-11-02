@@ -13,6 +13,7 @@ interface StringLiteralTypeNode extends ts.TypeNode {
 
 interface Options {
 	baseDir: string;
+	config: string;
 	files: string[];
 	excludes?: string[];
 	externs?: string[];
@@ -20,6 +21,7 @@ interface Options {
 	includes?: string[];
 	indent?: string;
 	main?: string;
+	moduleResolution?: ts.ModuleResolutionKind;
 	name: string;
 	out: string;
 	outDir?: string;
@@ -100,8 +102,27 @@ function processTree(sourceFile: ts.SourceFile, replacer: (node: ts.Node) => str
 	return code;
 }
 
+function getTSConfig(options: Options, fileName: string): Options {
+	const configText = fs.readFileSync(fileName, { encoding: 'utf8' });
+	const result = ts.parseConfigFileText(fileName, configText);
+	const configObject = result.config;
+	const configParseResult = ts.parseConfigFile(configObject, ts.sys, pathUtil.dirname(fileName));
+	options.target = configParseResult.options.target;
+	if (configParseResult.options.outDir) {
+		options.outDir = configParseResult.options.outDir;
+	}
+	if (configParseResult.options.moduleResolution) {
+		options.moduleResolution = configParseResult.options.moduleResolution;
+	}
+	options.files = configParseResult.fileNames;
+	return;
+}
+
 export function generate(options: Options, sendMessage: (message: string) => void = function () {}) {
-	const baseDir = pathUtil.resolve(options.baseDir);
+	if (options.config) {
+		getTSConfig(options, options.config);
+	}
+	const baseDir = options.config ? pathUtil.resolve(pathUtil.dirname(options.config)) : pathUtil.resolve(options.baseDir);
 	const eol = options.eol || os.EOL;
 	const nonEmptyLineStart = new RegExp(eol + '(?!' + eol + '|$)', 'g');
 	const indent = options.indent === undefined ? '\t' : options.indent;
@@ -113,6 +134,9 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 	};
 	if (options.outDir) {
 		compilerOptions.outDir = options.outDir;
+	}
+	if (options.moduleResolution) {
+		compilerOptions.moduleResolution = options.moduleResolution;
 	}
 
 	const filenames = getFilenames(baseDir, options.files);

@@ -15,5 +15,11 @@ registerSuite({
 			files: [ 'index.ts' ],
 			out: 'tmp/foo.d.ts'
 		});
+	},
+	'config': function () {
+		dtsGenerator.generate({
+			config: 'tests/support/foo/tsconfig.json',
+			out: 'tmp/foo.config.d.ts'
+		});
 	}
 });
