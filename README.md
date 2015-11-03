@@ -24,10 +24,9 @@ JavaScript that users can simply reference from the TypeScript compiler using a 
    Programmatically:
 
    ```js
-require('dts-generator').generate({
+require('dts-generator')({
 		name: 'package-name',
-		baseDir: '/path/to/package-directory',
-		files: [ 'a.ts', 'b.ts', ... ],
+		project: '/path/to/package-directory',
 		out: 'package-name.d.ts'
 });
 ```
@@ -35,7 +34,7 @@ require('dts-generator').generate({
    Command-line:
 
    ```bash
-dts-generator --name package-name --baseDir /path/to/package-directory --out package-name.d.ts a.ts b.ts ...
+dts-generator --name package-name --project /path/to/package-directory --out package-name.d.ts
 ```
 
    Grunt:
@@ -47,7 +46,7 @@ module.exports = function (grunt) {
 		dtsGenerator: {
 			options: {
 				name: 'package-name',
-				baseDir: '/path/to/package-directory',
+				project: '/path/to/package-directory',
 				out: 'package-name.d.ts'
 			},
 			default: {
@@ -70,8 +69,8 @@ import Foo = require('package-name/Foo');
 
 ## Options
 
-* `baseDir: string`: The base directory for the package being bundled. Any dependencies discovered outside this
-  directory will be excluded from the bundle.
+* `baseDir?: string`: The base directory for the package being bundled. Any dependencies discovered outside this
+  directory will be excluded from the bundle.  *Note* this is no longer the preferred way to configure `dts-generator`, please see `project`.
 * `excludes?: string[]`: A list of glob patterns, relative to `baseDir`, that should be excluded from the bundle. Use
   the `--exclude` flag one or more times on the command-line. Defaults to `[ "node_modules/**/*.d.ts" ]`.
 * `externs?: string[]`: A list of external module reference paths that should be inserted as reference comments. Use
@@ -80,8 +79,10 @@ import Foo = require('package-name/Foo');
 * `eol?: string`: The end-of-line character that should be used when outputting code. Defaults to `os.EOL`.
 * `indent?: string`: The character(s) that should be used to indent the declarations in the output. Defaults to `\t`.
 * `main?: string`: The module ID that should be used as the exported value of the package’s “main” module.
+* `moduleResolution?: ts.ModuleResolutionKind`: The type of module resolution to use when generating the bundle.
 * `name: string`: The name of the package. Used to determine the correct exported package name for modules.
 * `out: string`: The filename where the generated bundle will be created.
+* `project?: string`: The base directory for the project being bundled.  It is assumed that this directory contains a `tsconfig.json` which will be parsed to determine the files that should be bundled as well as other configuration information like `target`
 * `target?: ts.ScriptTarget`: The target environment for generated code. Defaults to `ts.ScriptTarget.Latest`.
 
 ## Known issues
