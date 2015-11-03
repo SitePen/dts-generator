@@ -12,18 +12,22 @@ interface StringLiteralTypeNode extends ts.TypeNode {
 }
 
 interface Options {
-	baseDir: string;
-	files: string[];
-	excludes?: string[];
+	baseDir?: string;
+	project?: string;
+	files?: string[];
+	exclude?: string[];
 	externs?: string[];
 	eol?: string;
 	includes?: string[];
 	indent?: string;
 	main?: string;
+	moduleResolution?: ts.ModuleResolutionKind;
 	name: string;
 	out: string;
 	outDir?: string;
 	target?: ts.ScriptTarget;
+	sendMessage?: (message: any, ...optionalParams: any[]) => void;
+	verbose?: boolean;
 }
 
 const filenameToMid: (filename: string) => string = (function () {
@@ -100,36 +104,87 @@ function processTree(sourceFile: ts.SourceFile, replacer: (node: ts.Node) => str
 	return code;
 }
 
-export function generate(options: Options, sendMessage: (message: string) => void = function () {}) {
-	const baseDir = pathUtil.resolve(options.baseDir);
+function getTSConfig(options: Options, fileName: string): Options {
+	const configText = fs.readFileSync(fileName, { encoding: 'utf8' });
+	const result = ts.parseConfigFileText(fileName, configText);
+	const configObject = result.config;
+	const configParseResult = ts.parseConfigFile(configObject, ts.sys, pathUtil.dirname(fileName));
+	options.target = configParseResult.options.target;
+	if (configParseResult.options.outDir) {
+		options.outDir = configParseResult.options.outDir;
+	}
+	if (configParseResult.options.moduleResolution) {
+		options.moduleResolution = configParseResult.options.moduleResolution;
+	}
+	options.files = configParseResult.fileNames;
+	return;
+}
+
+export default function generate(options: Options): Promise<void> {
+
+	const noop = function (message?: any, ...optionalParams: any[]): void {};
+	const sendMessage = options.sendMessage || noop;
+	const verboseMessage = options.verbose ? sendMessage : noop;
+
+	/* following tsc behaviour, if a project is speicified, or if no files are specified then
+	 * attempt to load tsconfig.json */
+	if (options.project || !options.files || options.files.length === 0) {
+		verboseMessage(`project = "${options.project || options.baseDir}"`);
+		const tsconfigFilename = pathUtil.join(options.project || options.baseDir, 'tsconfig.json');
+		if (fs.existsSync(tsconfigFilename)) {
+			verboseMessage(`  parsing "${tsconfigFilename}"`);
+			getTSConfig(options, tsconfigFilename);
+		}
+		else {
+			sendMessage(`No "tsconfig.json" found at "${tsconfigFilename}"!`);
+			return new Promise<void>(function (resolve, reject) {
+				reject(new SyntaxError('Unable to resolve configuration.'));
+			});
+		}
+	}
+
+	const baseDir = pathUtil.resolve(options.project || options.baseDir);
+	verboseMessage(`baseDir = "${baseDir}"`);
 	const eol = options.eol || os.EOL;
 	const nonEmptyLineStart = new RegExp(eol + '(?!' + eol + '|$)', 'g');
 	const indent = options.indent === undefined ? '\t' : options.indent;
 	const target = options.target || ts.ScriptTarget.Latest;
+	verboseMessage(`taget = ${target}`);
 	const compilerOptions: ts.CompilerOptions = {
 		declaration: true,
 		module: ts.ModuleKind.CommonJS,
 		target: target
 	};
 	if (options.outDir) {
+		verboseMessage(`outDir = ${options.outDir}`);
 		compilerOptions.outDir = options.outDir;
+	}
+	if (options.moduleResolution) {
+		verboseMessage(`moduleResolution = ${options.moduleResolution}`);
+		compilerOptions.moduleResolution = options.moduleResolution;
 	}
 
 	const filenames = getFilenames(baseDir, options.files);
+	verboseMessage('filenames:');
+	filenames.forEach(name => { verboseMessage('  ' + name); });
 	const excludesMap: { [filename: string]: boolean; } = {};
 
-	options.excludes = options.excludes || [ 'node_modules/**/*.d.ts' ];
+	options.exclude = options.exclude || [ 'node_modules/**/*.d.ts' ];
 
-	options.excludes && options.excludes.forEach(function (filename) {
+	options.exclude && options.exclude.forEach(function (filename) {
 		glob.sync(filename).forEach(function(globFileName) {
 			excludesMap[filenameToMid(pathUtil.resolve(baseDir, globFileName))] = true;
 		});
 	});
+	if (options.exclude) {
+		verboseMessage('exclude:');
+		options.exclude.forEach(name => { verboseMessage('  ' + name); });
+	}
 
 	mkdirp.sync(pathUtil.dirname(options.out));
 	/* node.js typings are missing the optional mode in createWriteStream options and therefore
 	 * in TS 1.6 the strict object literal checking is throwing, therefore a hammer to the nut */
-	const output = (<any> fs).createWriteStream(options.out, { mode: parseInt('644', 8) });
+	const output = fs.createWriteStream(options.out, <any> { mode: parseInt('644', 8) });
 
 	const host = ts.createCompilerHost(compilerOptions);
 	const program = ts.createProgram(filenames, compilerOptions, host);
@@ -154,6 +209,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 			});
 		}
 
+		sendMessage('processing:');
 		program.getSourceFiles().some(function (sourceFile) {
 			// Source file is a default library, or other dependency from another project, that should not be included in
 			// our bundled output
@@ -165,7 +221,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 				return;
 			}
 
-			sendMessage(`Processing ${sourceFile.fileName}`);
+			sendMessage(`  ${sourceFile.fileName}`);
 
 			// Source file is already a declaration file so should does not need to be pre-processed by the emitter
 			if (sourceFile.fileName.slice(-5) === '.d.ts') {
@@ -194,6 +250,7 @@ export function generate(options: Options, sendMessage: (message: string) => voi
 			sendMessage(`Aliased main module ${options.name} to ${options.main}`);
 		}
 
+		sendMessage(`output to "${options.out}"`);
 		output.end();
 	});
 
