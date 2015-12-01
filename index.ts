@@ -106,9 +106,9 @@ function processTree(sourceFile: ts.SourceFile, replacer: (node: ts.Node) => str
 
 function getTSConfig(options: Options, fileName: string): Options {
 	const configText = fs.readFileSync(fileName, { encoding: 'utf8' });
-	const result = ts.parseConfigFileText(fileName, configText);
+	const result = ts.parseConfigFileTextToJson(fileName, configText);
 	const configObject = result.config;
-	const configParseResult = ts.parseConfigFile(configObject, ts.sys, pathUtil.dirname(fileName));
+	const configParseResult = ts.parseJsonConfigFileContent(configObject, ts.sys, pathUtil.dirname(fileName));
 	options.target = configParseResult.options.target;
 	if (configParseResult.options.outDir) {
 		options.outDir = configParseResult.options.outDir;
