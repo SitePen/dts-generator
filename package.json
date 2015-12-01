@@ -17,7 +17,7 @@
 		"bluebird": "2.10.2",
 		"glob": "5.0.15",
 		"mkdirp": "0.5.1",
-		"typescript": "1.6.2"
+		"typescript": "1.7.3"
 	},
 	"devDependencies": {
 		"tsd": "0.6.5",
