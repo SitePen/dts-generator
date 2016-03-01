@@ -44,5 +44,18 @@ registerSuite({
 			assert.include(contents, `module 'foo/index'`);
 			assert.include(contents, `module 'foo/Bar'`);
 		});
+	},
+	'es6 main module': function () {
+		return generate({
+			name: 'foo',
+			project: 'tests/support/foo-es6',
+			out: 'tmp/foo.es6.d.ts',
+			main: 'index.ts'
+		}).then(function () {
+			const contents = fs.readFileSync('tmp/foo.es6.d.ts', { encoding: 'utf8' });
+			assert(contents, 'foo.es6.d.ts should exist and have contents');
+			// assert.include(contents, `module 'foo/index'`);
+			// assert.include(contents, `module 'foo/Bar'`);
+		});
 	}
 });
