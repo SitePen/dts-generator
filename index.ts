@@ -183,7 +183,7 @@ export default function generate(options: Options): Promise<void> {
 	const eol = options.eol || os.EOL;
 	const nonEmptyLineStart = new RegExp(eol + '(?!' + eol + '|$)', 'g');
 	const indent = options.indent === undefined ? '\t' : options.indent;
-	const target = options.target || ts.ScriptTarget.Latest;
+	const target = typeof options.target !== 'undefined' ? options.target : ts.ScriptTarget.Latest;
 	verboseMessage(`taget = ${target}`);
 	const compilerOptions: ts.CompilerOptions = {
 		declaration: true,
