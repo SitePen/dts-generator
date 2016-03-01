@@ -151,6 +151,10 @@ function isNodeKindExportDeclaration(value: ts.Node): value is ts.ExportDeclarat
 	return value && value.kind === ts.SyntaxKind.ExportDeclaration;
 }
 
+function isNodeKindExportAssignment(value: ts.Node): value is ts.ExportAssignment {
+	return value && value.kind === ts.SyntaxKind.ExportAssignment;
+}
+
 export default function generate(options: Options): Promise<void> {
 
 	const noop = function (message?: any, ...optionalParams: any[]): void {};
@@ -241,6 +245,8 @@ export default function generate(options: Options): Promise<void> {
 		}
 
 		sendMessage('processing:');
+		let mainExportDeclaration = false;
+		let mainExportAssignment = false;
 		program.getSourceFiles().some(function (sourceFile) {
 			// Source file is a default library, or other dependency from another project, that should not be included in
 			// our bundled output
@@ -260,6 +266,14 @@ export default function generate(options: Options): Promise<void> {
 				return;
 			}
 
+			// We can optionally output the main module if there's something to export.
+			if (options.main && options.main === (options.name + filenameToMid(sourceFile.fileName.slice(baseDir.length, -3)))) {
+				ts.forEachChild(sourceFile, function (node: ts.Node) {
+					mainExportDeclaration = mainExportDeclaration || isNodeKindExportDeclaration(node);
+					mainExportAssignment = mainExportAssignment || isNodeKindExportAssignment(node);
+				});
+			}
+
 			const emitOutput = program.emit(sourceFile, writeFile);
 			if (emitOutput.emitSkipped || emitOutput.diagnostics.length > 0) {
 				reject(getError(
@@ -273,10 +287,19 @@ export default function generate(options: Options): Promise<void> {
 			}
 		});
 
-		if (options.main) {
+		if (options.main && (mainExportDeclaration || mainExportAssignment)) {
 			output.write(`declare module '${options.name}' {` + eol + indent);
-			output.write(`import main = require('${options.main}');` + eol + indent);
-			output.write('export = main;' + eol);
+			if (compilerOptions.target >= ts.ScriptTarget.ES6) {
+				if (mainExportAssignment) {
+					output.write(`export {default} from '${options.main}';` + eol + indent);
+				}
+				if (mainExportDeclaration) {
+					output.write(`export * from '${options.main}';` + eol);
+				}
+			} else {
+				output.write(`import main = require('${options.main}');` + eol + indent);
+				output.write('export = main;' + eol);
+			}
 			output.write('}' + eol);
 			sendMessage(`Aliased main module ${options.name} to ${options.main}`);
 		}
