@@ -24,7 +24,7 @@ JavaScript that users can simply reference from the TypeScript compiler using a 
    Programmatically:
 
    ```js
-require('dts-generator')({
+require('dts-generator').default({
 		name: 'package-name',
 		project: '/path/to/package-directory',
 		out: 'package-name.d.ts'
