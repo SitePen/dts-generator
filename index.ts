@@ -20,6 +20,7 @@ interface Options {
 	name: string;
 	out: string;
 	outDir?: string;
+	rootDir?: string;
 	target?: ts.ScriptTarget;
 	sendMessage?: (message: any, ...optionalParams: any[]) => void;
 	verbose?: boolean;
@@ -127,6 +128,9 @@ function getTSConfig(options: Options, fileName: string): Options {
 	if (configParseResult.options.moduleResolution) {
 		options.moduleResolution = configParseResult.options.moduleResolution;
 	}
+	if (configParseResult.options.rootDir) {
+		options.rootDir = configParseResult.options.rootDir;
+	}
 	options.files = configParseResult.fileNames;
 	return options;
 }
@@ -170,7 +174,7 @@ export default function generate(options: Options): Promise<void> {
 		}
 	}
 
-	const baseDir = pathUtil.resolve(options.project || options.baseDir);
+	const baseDir = pathUtil.resolve(options.rootDir || options.project || options.baseDir);
 	verboseMessage(`baseDir = "${baseDir}"`);
 	const eol = options.eol || os.EOL;
 	const nonEmptyLineStart = new RegExp(eol + '(?!' + eol + '|$)', 'g');
