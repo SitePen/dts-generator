@@ -6,11 +6,9 @@
 		"declaration": false,
 		"noImplicitAny": true
 	},
-	"filesGlob": [
-		"./*.ts"
-	],
 	"files": [
 		"./index.ts",
+		"./baz.ts",
 		"./Bar.ts"
 	]
 }

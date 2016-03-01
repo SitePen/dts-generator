@@ -6,11 +6,6 @@ import * as pathUtil from 'path';
 import * as Promise from 'bluebird';
 import * as ts from 'typescript';
 
-/* This node type appears to not be available in 1.6-beta, so "recreating" */
-interface StringLiteralTypeNode extends ts.TypeNode {
-	text: string;
-}
-
 interface Options {
 	baseDir?: string;
 	project?: string;
@@ -44,6 +39,11 @@ const filenameToMid: (filename: string) => string = (function () {
 	}
 })();
 
+/**
+ * A helper function that takes TypeScript diagnostic errors and returns an error
+ * object.
+ * @param diagnostics The array of TypeScript Diagnostic objects
+ */
 function getError(diagnostics: ts.Diagnostic[]) {
 	let message = 'Declaration generation failed';
 
@@ -104,11 +104,22 @@ function processTree(sourceFile: ts.SourceFile, replacer: (node: ts.Node) => str
 	return code;
 }
 
+/**
+ * Load and parse a TSConfig File
+ * @param options The dts-generator options to load config into
+ * @param fileName The path to the file
+ */
 function getTSConfig(options: Options, fileName: string): Options {
 	const configText = fs.readFileSync(fileName, { encoding: 'utf8' });
 	const result = ts.parseConfigFileTextToJson(fileName, configText);
+	if (result.error) {
+		throw getError([ result.error ]);
+	}
 	const configObject = result.config;
 	const configParseResult = ts.parseJsonConfigFileContent(configObject, ts.sys, pathUtil.dirname(fileName));
+	if (configParseResult.errors && configParseResult.errors.length) {
+		throw getError(configParseResult.errors);
+	}
 	options.target = configParseResult.options.target;
 	if (configParseResult.options.outDir) {
 		options.outDir = configParseResult.options.outDir;
@@ -117,7 +128,23 @@ function getTSConfig(options: Options, fileName: string): Options {
 		options.moduleResolution = configParseResult.options.moduleResolution;
 	}
 	options.files = configParseResult.fileNames;
-	return;
+	return options;
+}
+
+function isNodeKindImportDeclaration(value: ts.Node): value is ts.ImportDeclaration {
+	return value && value.kind === ts.SyntaxKind.ImportDeclaration;
+}
+
+function isNodeKindExternalModuleReference(value: ts.Node): value is ts.ExternalModuleReference {
+	return value && value.kind === ts.SyntaxKind.ExternalModuleReference;
+}
+
+function isNodeKindStringLiteral(value: ts.Node): value is ts.StringLiteral {
+	return value && value.kind === ts.SyntaxKind.StringLiteral;
+}
+
+function isNodeKindExportDeclaration(value: ts.Node): value is ts.ExportDeclaration {
+	return value && value.kind === ts.SyntaxKind.ExportDeclaration;
 }
 
 export default function generate(options: Options): Promise<void> {
@@ -258,14 +285,14 @@ export default function generate(options: Options): Promise<void> {
 		const filename = declarationFile.fileName;
 		const sourceModuleId = options.name + filenameToMid(filename.slice(baseDir.length, -5));
 
-		/* For some reason, SourceFile.externalModuleIndicator is missing from 1.6-beta, so having
+		/* For some reason, SourceFile.externalModuleIndicator is missing from 1.6+, so having
 		 * to use a sledgehammer on the nut */
 		if ((<any> declarationFile).externalModuleIndicator) {
 			output.write('declare module \'' + sourceModuleId + '\' {' + eol + indent);
 
 			const content = processTree(declarationFile, function (node) {
-				if (node.kind === ts.SyntaxKind.ExternalModuleReference) {
-					const expression = <ts.LiteralExpression> (<ts.ExternalModuleReference> node).expression;
+				if (isNodeKindExternalModuleReference(node)) {
+					const expression = node.expression as ts.LiteralExpression;
 
 					if (expression.text.charAt(0) === '.') {
 						return ' require(\'' + filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), expression.text)) + '\')';
@@ -275,10 +302,10 @@ export default function generate(options: Options): Promise<void> {
 					return '';
 				}
 				else if (
-					node.kind === ts.SyntaxKind.StringLiteral &&
-					(node.parent.kind === ts.SyntaxKind.ExportDeclaration || node.parent.kind === ts.SyntaxKind.ImportDeclaration)
+					isNodeKindStringLiteral(node) && node.parent &&
+					(isNodeKindExportDeclaration(node.parent) || isNodeKindImportDeclaration(node.parent))
 				) {
-					const text = (<StringLiteralTypeNode> node).text;
+					const text = node.text;
 					if (text.charAt(0) === '.') {
 						return ` '${filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), text))}'`;
 					}
