@@ -14,10 +14,12 @@
 		"dts-generator": "bin/dts-generator"
 	},
 	"dependencies": {
-		"bluebird": "2.10.2",
-		"glob": "5.0.15",
-		"mkdirp": "0.5.1",
-		"typescript": "1.7.3"
+		"bluebird": "3.3.3",
+		"glob": "7.0.0",
+		"mkdirp": "0.5.1"
+	},
+	"peerDependencies": {
+		"typescript": "^1.6.0"
 	},
 	"devDependencies": {
 		"tsd": "0.6.5",

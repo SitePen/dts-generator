@@ -1,5 +1,5 @@
 {
-	"version": "1.7.3",
+	"version": "1.8.0",
 	"compilerOptions": {
 		"target": "es5",
 		"module": "umd",
@@ -27,6 +27,5 @@
 		"./tests/unit/index.ts",
 		"./typings/tsd.d.ts",
 		"./node_modules/typescript/lib/typescript.d.ts"
-	],
-	"exclude": []
+	]
 }
