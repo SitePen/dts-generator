@@ -51,7 +51,7 @@ export = function main(argv: string[]): Promise<number | void> {
 		}
 	}
 
-	[ 'name', 'out' ].forEach(function (key) {
+	[ 'out' ].forEach(function (key) {
 		if (!kwArgs[key]) {
 			console.error(`Missing required argument "${key}"`);
 			process.exit(1);

@@ -17,7 +17,7 @@ interface Options {
 	indent?: string;
 	main?: string;
 	moduleResolution?: ts.ModuleResolutionKind;
-	name: string;
+	name?: string;
 	out: string;
 	outDir?: string;
 	rootDir?: string;
@@ -287,7 +287,7 @@ export default function generate(options: Options): Promise<void> {
 			}
 		});
 
-		if (options.main && (mainExportDeclaration || mainExportAssignment)) {
+		if (options.main && options.name) {
 			output.write(`declare module '${options.name}' {` + eol + indent);
 			if (compilerOptions.target >= ts.ScriptTarget.ES6) {
 				if (mainExportAssignment) {
@@ -310,7 +310,7 @@ export default function generate(options: Options): Promise<void> {
 
 	function writeDeclaration(declarationFile: ts.SourceFile) {
 		const filename = declarationFile.fileName;
-		const sourceModuleId = options.name + filenameToMid(filename.slice(baseDir.length, -5));
+		const sourceModuleId = options.name ? options.name + filenameToMid(filename.slice(baseDir.length, -5)) : filenameToMid(filename.slice(baseDir.length + 1, -5));
 
 		/* For some reason, SourceFile.externalModuleIndicator is missing from 1.6+, so having
 		 * to use a sledgehammer on the nut */
