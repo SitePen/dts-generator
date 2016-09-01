@@ -18,13 +18,11 @@
 		"glob": "7.0.0",
 		"mkdirp": "0.5.1"
 	},
-	"peerDependencies": {
-		"typescript": "^1.6.0"
-	},
 	"devDependencies": {
 		"intern": "~3.0.0",
 		"tsd": "0.6.5",
-		"tslint": "3.5.0"
+		"tslint": "3.11.0",
+    "typescript": "beta"
 	},
 	"scripts": {
 		"prepublish": "tsc --module commonjs --target es5 typings/tsd.d.ts index.ts bin/dts-generator.ts",
