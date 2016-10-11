@@ -1,33 +1,32 @@
 {
-	"name": "dts-generator",
-	"description": ".d.ts generator. Generates a single d.ts bundle containing external modules from TypeScript files.",
-	"version": "1.8.0-pre",
-	"bugs": {
-		"url": "https://github.com/SitePen/dts-generator/issues"
-	},
-	"license": "BSD-3-Clause",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/SitePen/dts-generator.git"
-	},
-	"bin": {
-		"dts-generator": "bin/dts-generator"
-	},
-	"dependencies": {
-		"bluebird": "3.3.3",
-		"glob": "7.0.0",
-		"mkdirp": "0.5.1"
-	},
-	"peerDependencies": {
-		"typescript": "^1.6.0"
-	},
-	"devDependencies": {
-		"intern": "~3.0.0",
-		"tsd": "0.6.5",
-		"tslint": "3.5.0"
-	},
-	"scripts": {
-		"prepublish": "tsc --module commonjs --target es5 typings/tsd.d.ts index.ts bin/dts-generator.ts",
-		"test": "tests/run.sh"
-	}
+  "name": "dts-generator",
+  "description": ".d.ts generator. Generates a single d.ts bundle containing external modules from TypeScript files.",
+  "version": "1.8.0-pre",
+  "bugs": {
+    "url": "https://github.com/SitePen/dts-generator/issues"
+  },
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SitePen/dts-generator.git"
+  },
+  "bin": {
+    "dts-generator": "bin/dts-generator"
+  },
+  "dependencies": {
+    "bluebird": "3.3.3",
+    "glob": "7.0.0",
+    "mkdirp": "0.5.1"
+  },
+  "devDependencies": {
+    "dojo-loader": ">=2.0.0-beta.5",
+    "intern": "~3.0.0",
+    "tsd": "0.6.5",
+    "tslint": "3.11.0",
+    "typescript": "~2.0.3"
+  },
+  "scripts": {
+    "prepublish": "tsc --module umd --target es5 --moduleResolution node typings/tsd.d.ts index.ts bin/dts-generator.ts",
+    "test": "tests/run.sh"
+  }
 }

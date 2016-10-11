@@ -1,31 +1,20 @@
 {
-	"version": "1.8.0",
+	"version": "2.0.2",
 	"compilerOptions": {
 		"target": "es5",
 		"module": "umd",
 		"declaration": false,
 		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"strictNullChecks": true,
 		"moduleResolution": "node"
 	},
-	"filesGlob": [
+	"include": [
 		"./*.ts",
 		"./bin/**/*.ts",
 		"./tests/**/*.ts",
 		"./typings/tsd.d.ts",
 		"./node_modules/typescript/lib/typescript.d.ts",
 		"./node_modules/typescript/lib/typescript.ts"
-	],
-	"files": [
-		"./index.ts",
-		"./bin/dts-generator.ts",
-		"./tests/intern.ts",
-		"./tests/support/foo/Bar.ts",
-		"./tests/support/foo/index.ts",
-		"./tests/typings/dts-generator/dts-generator.d.ts",
-		"./tests/unit/all.ts",
-		"./tests/unit/bin/dts-generator.ts",
-		"./tests/unit/index.ts",
-		"./typings/tsd.d.ts",
-		"./node_modules/typescript/lib/typescript.d.ts"
 	]
 }

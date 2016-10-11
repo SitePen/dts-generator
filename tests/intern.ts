@@ -1,9 +1,14 @@
-export let loaderOptions = {
+export const loaders = {
+	'host-browser': 'node_modules/dojo-loader/loader.js',
+	'host-node': 'dojo-loader'
+};
+
+export const loaderOptions = {
 	packages: [
 		{ name: 'dts-generator', location: '.' }
 	]
 };
 
-export let suites = [ 'dts-generator/tests/unit/all' ];
+export const suites = [ 'dts-generator/tests/unit/all' ];
 
-export let excludeInstrumentation = /^(?:tests|node_modules)\//;
+export const excludeInstrumentation = /^(?:tests|node_modules)\//;

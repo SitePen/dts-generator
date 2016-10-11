@@ -1,6 +1,6 @@
 import generate from '../index';
 
-export = function main(argv: string[]): Promise<number | void> {
+export default function main(argv: string[]): Promise<number | void> {
 	const kwArgs: {
 		[key: string]: any;
 		baseDir?: string;
@@ -73,4 +73,4 @@ export = function main(argv: string[]): Promise<number | void> {
 	return generate(<any> kwArgs).then(function () {
 		console.log('Done!');
 	});
-}
+};

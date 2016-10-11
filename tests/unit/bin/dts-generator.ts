@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import * as dtsGenerator from 'intern/dojo/node!../../../bin/dts-generator';
+import dtsGenerator from '../../../bin/dts-generator';
 
 registerSuite({
 	name: 'bin/dts-generator',

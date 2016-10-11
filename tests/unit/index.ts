@@ -1,7 +1,7 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import generate from 'intern/dojo/node!../../index';
-import * as fs from 'intern/dojo/node!fs';
+import generate from '../../index';
+import * as fs from 'fs';
 
 registerSuite({
 	name: 'index',
