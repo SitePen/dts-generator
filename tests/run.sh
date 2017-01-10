@@ -7,6 +7,6 @@ echo "Building modules..."
 node_modules/.bin/tsc --module umd --target es5 --moduleResolution node node_modules/intern/typings/intern/intern.d.ts typings/tsd.d.ts tests/intern.ts tests/unit/all.ts
 node_modules/.bin/tsc --module umd --target es5 --sourcemap --moduleResolution node typings/tsd.d.ts index.ts bin/dts-generator.ts
 echo "Running intern..."
-node_modules/.bin/intern-runner config=tests/intern reporters=Console
+node_modules/.bin/intern-client config=tests/intern reporters=Console
 echo "Cleanup..."
 rm -rf tmp
