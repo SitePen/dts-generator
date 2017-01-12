@@ -161,11 +161,27 @@ export default function generate(options: Options): Promise<void> {
 	const sendMessage = options.sendMessage || noop;
 	const verboseMessage = options.verbose ? sendMessage : noop;
 
-	/* following tsc behaviour, if a project is speicified, or if no files are specified then
+	/* following tsc behaviour, if a project is specified, or if no files are specified then
 	 * attempt to load tsconfig.json */
 	if (options.project || !options.files || options.files.length === 0) {
 		verboseMessage(`project = "${options.project || options.baseDir}"`);
-		const tsconfigFilename = pathUtil.join(options.project || options.baseDir, 'tsconfig.json');
+
+		// if project isn't specified, use baseDir.  If it is and it's a directory,
+		// assume we want tsconfig.json in that directory.  If it is a file, though
+		// use that as our tsconfig.json.  This allows for projects that have more
+		// than one tsconfig.json file.
+		let tsconfigFilename: string;
+		if (Boolean(options.project)) {
+			if (fs.lstatSync(options.project).isDirectory()) {
+				tsconfigFilename = pathUtil.join(options.project, 'tsconfig.json');
+			} else {
+				// project isn't a diretory, it's a file
+				tsconfigFilename = options.project;
+			}
+		} else {
+			tsconfigFilename = pathUtil.join(options.baseDir, 'tsconfig.json');
+		}
+
 		if (fs.existsSync(tsconfigFilename)) {
 			verboseMessage(`  parsing "${tsconfigFilename}"`);
 			getTSConfig(options, tsconfigFilename);

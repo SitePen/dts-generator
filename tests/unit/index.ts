@@ -45,6 +45,21 @@ registerSuite({
 			assert.include(contents, `module 'foo/Bar'`);
 		});
 	},
+	'project json file': function () {
+		return generate({
+			name: 'foo',
+			project: 'tests/support/foo/tsconfig-alt.json',
+			out: 'tmp/foo-alt.config.d.ts'
+		}).then(function () {
+			const contents = fs.readFileSync('tmp/foo-alt.config.d.ts', { encoding: 'utf8' });
+			assert(contents, 'foo-alt.config.d.ts should exist and have contents');
+
+			// tsconfig-alt.json includes baz and Bar but not index
+			assert.include(contents, `module 'foo/baz'`);
+			assert.include(contents, `module 'foo/Bar'`);
+			assert.notInclude(contents, `module 'foo/index'`);
+		});
+	},
 	'es6 main module': function () {
 		return generate({
 			name: 'foo',
