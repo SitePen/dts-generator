@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "umd",
+    "rootDir": ".",
+    "moduleResolution": "node"
+  },
+  "files": [
+    "../node_modules/intern/typings/intern/intern.d.ts",
+    "../typings/tsd.d.ts",
+    "intern.ts",
+    "unit/all.ts"
+  ]
+}

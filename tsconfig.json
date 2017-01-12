@@ -6,13 +6,12 @@
 		"declaration": false,
 		"noImplicitAny": true,
 		"noImplicitThis": true,
-		"strictNullChecks": true,
+		"strictNullChecks": false,
 		"moduleResolution": "node"
 	},
 	"include": [
 		"./*.ts",
 		"./bin/**/*.ts",
-		"./tests/**/*.ts",
 		"./typings/tsd.d.ts",
 		"./node_modules/typescript/lib/typescript.d.ts",
 		"./node_modules/typescript/lib/typescript.ts"
