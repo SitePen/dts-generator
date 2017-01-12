@@ -23,7 +23,7 @@
     "intern": "~3.0.0",
     "tsd": "0.6.5",
     "tslint": "3.11.0",
-    "typescript": "~2.0.3"
+    "typescript": "^2.1.4"
   },
   "scripts": {
     "prepublish": "tsc --module umd --target es5 --moduleResolution node typings/tsd.d.ts index.ts bin/dts-generator.ts",

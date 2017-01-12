@@ -289,7 +289,7 @@ export default function generate(options: Options): Promise<void> {
 
 		if (options.main && options.name) {
 			output.write(`declare module '${options.name}' {` + eol + indent);
-			if (compilerOptions.target >= ts.ScriptTarget.ES6) {
+			if (compilerOptions.target >= ts.ScriptTarget.ES2015) {
 				if (mainExportAssignment) {
 					output.write(`export {default} from '${options.main}';` + eol + indent);
 				}
