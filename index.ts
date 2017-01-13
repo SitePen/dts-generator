@@ -49,11 +49,18 @@ function getError(diagnostics: ts.Diagnostic[]) {
 	let message = 'Declaration generation failed';
 
 	diagnostics.forEach(function (diagnostic) {
-		const position = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
+		// not all errors have an associated file: in particular, problems with a
+		// the tsconfig.json don't; the messageText is enough to diagnose in those
+		// cases.
+		if (diagnostic.file) {
+			const position = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
 
-		message +=
-			`\n${diagnostic.file.fileName}(${position.line + 1},${position.character + 1}): ` +
-			`error TS${diagnostic.code}: ${diagnostic.messageText}`;
+			message +=
+				`\n${diagnostic.file.fileName}(${position.line + 1},${position.character + 1}): ` +
+				`error TS${diagnostic.code}: ${diagnostic.messageText}`;
+		} else {
+			message += `\nerror TS${diagnostic.code}: ${diagnostic.messageText}`;
+		}
 	});
 
 	const error = new Error(message);
