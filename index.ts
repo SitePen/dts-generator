@@ -26,6 +26,9 @@ interface Options {
 	verbose?: boolean;
 }
 
+// declare some constants so we don't have magic integers without explanation
+const DTSLEN = '.d.ts'.length;
+
 const filenameToMid: (filename: string) => string = (function () {
 	if (pathUtil.sep === '/') {
 		return function (filename: string) {
@@ -217,6 +220,10 @@ export default function generate(options: Options): Promise<void> {
 		verboseMessage(`outDir = ${options.outDir}`);
 		compilerOptions.outDir = options.outDir;
 	}
+	if (options.rootDir) {
+		verboseMessage(`rootDir = ${options.rootDir}`);
+		compilerOptions.rootDir = options.rootDir;
+	}
 	if (options.moduleResolution) {
 		verboseMessage(`moduleResolution = ${options.moduleResolution}`);
 		compilerOptions.moduleResolution = options.moduleResolution;
@@ -249,11 +256,11 @@ export default function generate(options: Options): Promise<void> {
 
 	function writeFile(filename: string, data: string, writeByteOrderMark: boolean) {
 		// Compiler is emitting the non-declaration file, which we do not care about
-		if (filename.slice(-5) !== '.d.ts') {
+		if (filename.slice(-DTSLEN) !== '.d.ts') {
 			return;
 		}
 
-		writeDeclaration(ts.createSourceFile(filename, data, target, true));
+		writeDeclaration(ts.createSourceFile(filename, data, target, true), true);
 	}
 
 	return new Promise<void>(function (resolve, reject) {
@@ -284,8 +291,8 @@ export default function generate(options: Options): Promise<void> {
 			sendMessage(`  ${sourceFile.fileName}`);
 
 			// Source file is already a declaration file so should does not need to be pre-processed by the emitter
-			if (sourceFile.fileName.slice(-5) === '.d.ts') {
-				writeDeclaration(sourceFile);
+			if (sourceFile.fileName.slice(-DTSLEN) === '.d.ts') {
+				writeDeclaration(sourceFile, false);
 				return;
 			}
 
@@ -331,9 +338,18 @@ export default function generate(options: Options): Promise<void> {
 		output.end();
 	});
 
-	function writeDeclaration(declarationFile: ts.SourceFile) {
-		const filename = declarationFile.fileName;
-		const sourceModuleId = options.name ? options.name + filenameToMid(filename.slice(baseDir.length, -5)) : filenameToMid(filename.slice(baseDir.length + 1, -5));
+	function writeDeclaration(declarationFile: ts.SourceFile, isOutput: boolean) {
+		// resolving is important for dealting with relative outDirs
+		const filename = pathUtil.resolve(declarationFile.fileName);
+
+		// use the outDir here, not the baseDir, because the declarationFiles are
+		// outputs of the build process; baseDir points instead to the inputs.
+		// However we have to account for .d.ts files in our inputs that this code
+		// is also used for.  Also if no outDir is used, the compiled code ends up
+		// alongside the source, so use baseDir in that case too.
+		const outDir = (isOutput && Boolean(options.outDir)) ? pathUtil.resolve(options.outDir) : baseDir;
+
+		const sourceModuleId = options.name ? options.name + filenameToMid(filename.slice(outDir.length, -DTSLEN)) : filenameToMid(filename.slice(outDir.length + 1, -DTSLEN));
 
 		/* For some reason, SourceFile.externalModuleIndicator is missing from 1.6+, so having
 		 * to use a sledgehammer on the nut */
