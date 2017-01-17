@@ -33,7 +33,7 @@ registerSuite({
 			assert.include(contents, `module 'foo/Bar'`);
 		});
 	},
-	'project': function () {
+	'project that explicitly lists all files': function () {
 		return generate({
 			name: 'foo',
 			project: 'tests/support/foo',
@@ -43,6 +43,7 @@ registerSuite({
 			assert(contents, 'foo.config.d.ts should exist and have contents');
 			assert.include(contents, `module 'foo/index'`);
 			assert.include(contents, `module 'foo/Bar'`);
+			assert.include(contents, `module 'foo/baz'`);
 		});
 	},
 	'project json file': function () {
@@ -80,6 +81,22 @@ registerSuite({
 			// also check imports look right
 			assert.include(contents, `import Bar from 'sub/Bar'`);
 			assert.include(contents, `from 'sub/baz';`);
+		});
+	},
+	'project that lets typescript resolve tsx imports for a jsx:react project': function () {
+		// This essentially tests that we properly handle the jsx option, if any.
+		// tsx alone, or module resolution with just ts files (no tsx), does need the
+		// jsx option to be handled correctly to work.
+		return generate({
+			name: 'foo2', // also test that the name is used how we expect
+			project: 'tests/support/foo-resolve-tsx/tsconfig.json',
+			out: 'tmp/foo.config.d.ts'
+		}).then(function () {
+			const contents = fs.readFileSync('tmp/foo.config.d.ts', { encoding: 'utf8' });
+			assert(contents, 'foo.config.d.ts should exist and have contents');
+			assert.include(contents, `module 'foo2/index'`);
+			assert.include(contents, `module 'foo2/Bar'`);
+			assert.include(contents, `module 'foo2/baz'`);
 		});
 	},
 	'es6 main module': function () {

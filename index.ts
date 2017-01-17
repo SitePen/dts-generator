@@ -42,6 +42,7 @@ export interface Options {
 	resolveModuleId?: (params: ResolveModuleIdParams) => string;
 	resolveModuleImport?: (params: ResolveModuleImportParams) => string;
 	verbose?: boolean;
+	jsx?: ts.JsxEmit;
 }
 
 // declare some constants so we don't have magic integers without explanation
@@ -138,7 +139,10 @@ function processTree(sourceFile: ts.SourceFile, replacer: (node: ts.Node) => str
  * @param options The dts-generator options to load config into
  * @param fileName The path to the file
  */
-function getTSConfig(options: Options, fileName: string): Options {
+function getTSConfig(options: Options, fileName: string): void {
+	// TODO this needs a better design than merging stuff into options.
+	// the trouble is what to do when no tsconfig is specified...
+
 	const configText = fs.readFileSync(fileName, { encoding: 'utf8' });
 	const result = ts.parseConfigFileTextToJson(fileName, configText);
 	if (result.error) {
@@ -160,7 +164,10 @@ function getTSConfig(options: Options, fileName: string): Options {
 		options.rootDir = configParseResult.options.rootDir;
 	}
 	options.files = configParseResult.fileNames;
-	return options;
+
+	if (configParseResult.options.jsx) {
+		options.jsx = configParseResult.options.jsx;
+	}
 }
 
 function isNodeKindImportDeclaration(value: ts.Node): value is ts.ImportDeclaration {
@@ -249,6 +256,9 @@ export default function generate(options: Options): Promise<void> {
 	if (options.moduleResolution) {
 		verboseMessage(`moduleResolution = ${options.moduleResolution}`);
 		compilerOptions.moduleResolution = options.moduleResolution;
+	}
+	if (options.jsx) {
+		compilerOptions.jsx = options.jsx;
 	}
 
 	const filenames = getFilenames(baseDir, options.files);
