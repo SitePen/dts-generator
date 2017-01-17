@@ -1,6 +1,6 @@
 import * as registerSuite from 'intern!object';
 import * as assert from 'intern/chai!assert';
-import generate from '../../index';
+import generate, { ResolveModuleIdParams, ResolveModuleImportParams } from '../../index';
 import * as fs from 'fs';
 
 registerSuite({
@@ -93,6 +93,70 @@ registerSuite({
 			assert(contents, 'foo.es6.d.ts should exist and have contents');
 			// assert.include(contents, `module 'foo/index'`);
 			// assert.include(contents, `module 'foo/Bar'`);
+		});
+	},
+	'resolve module id': function () {
+		return generate({
+			name: 'foo',
+			project: 'tests/support/foo-resolve-module-id',
+			out: 'tmp/foo.resolve-module-id.d.ts',
+			resolveModuleId: (params: ResolveModuleIdParams): string => {
+				if (params.currentModuleId === 'FooInterfaceExportAssignment') {
+					return 'ReplacedFooInterfaceExportAssignment';
+				}
+				else if (params.currentModuleId === 'FooInterfaceExportDeclaration') {
+					return 'ReplacedFooInterfaceExportDeclaration';
+				}
+				else if (params.currentModuleId === 'ReExport') {
+					return 'ReplacedReExport';
+				}
+				else {
+					return null;
+				}
+			},
+			resolveModuleImport: (params: ResolveModuleImportParams): string => {
+				if (params.importedModuleId === './FooInterfaceExportAssignment') {
+					return 'ReplacedFooInterfaceExportAssignment';
+				}
+				else if (params.importedModuleId === './FooInterfaceExportDeclaration') {
+					return 'ReplacedFooInterfaceExportDeclaration';
+				}
+				else if (params.importedModuleId === './ReExport') {
+					return 'ReplacedReExport';
+				}
+				else if (params.isDeclaredExternalModule) {
+					return 'ReplacedSomethingInJavaScript';
+				}
+				else {
+					return null;
+				}
+			}
+		}).then(function () {
+			const contents = fs.readFileSync('tmp/foo.resolve-module-id.d.ts', { encoding: 'utf8' });
+
+			// replaced interface module declarations
+			assert.include(contents, `declare module 'ReplacedFooInterfaceExportAssignment'`);
+			assert.include(contents, `declare module 'ReplacedFooInterfaceExportDeclaration'`);
+			// replaced interface imports
+			assert.include(contents, `import FooInterfaceExportAssignment = require('ReplacedFooInterfaceExportAssignment');`);
+			assert.include(contents, `import { FooInterfaceExportDeclaration } from 'ReplacedFooInterfaceExportDeclaration';`);
+
+			// replaced ReExport
+			assert.include(contents, `declare module 'ReplacedReExport'`);
+			assert.include(contents, `export { ReExport } from 'ReplacedReExport';`);
+
+			// replaced external module declaration import
+			assert.include(contents, `import { ClassInJavaScript } from 'ReplacedSomethingInJavaScript';`);
+
+			// non relative module import, should not be changed
+			assert.include(contents, `import { NonRelative } from 'NonRelative';`);
+
+			// class imports should not be replaced, also assert on them
+			assert.include(contents, `import FooImplExportAssignment = require('foo/FooImplExportAssignment');`);
+			assert.include(contents, `import { FooImplExportDeclaration } from 'foo/FooImplExportDeclaration';`);
+			// class module declarations should not be replaced, also assert on them
+			assert.include(contents, `declare module 'foo/FooImplExportAssignment'`);
+			assert.include(contents, `declare module 'foo/FooImplExportDeclaration'`);
 		});
 	}
 });

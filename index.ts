@@ -6,7 +6,23 @@ import * as pathUtil from 'path';
 import * as Promise from 'bluebird';
 import * as ts from 'typescript';
 
-interface Options {
+export interface ResolveModuleIdParams {
+	/** The identifier of the module being declared in the generated d.ts */
+	currentModuleId: string;
+}
+
+export interface ResolveModuleImportParams {
+	/** The identifier of the module currently being imported in the generated d.ts */
+	importedModuleId: string;
+
+	/** The identifier of the enclosing module currently being declared in the generated d.ts */
+	currentModuleId: string;
+
+	/** True if the imported module id is declared as a module in the input files. */
+	isDeclaredExternalModule: boolean;
+}
+
+export interface Options {
 	baseDir?: string;
 	project?: string;
 	files?: string[];
@@ -23,6 +39,8 @@ interface Options {
 	rootDir?: string;
 	target?: ts.ScriptTarget;
 	sendMessage?: (message: any, ...optionalParams: any[]) => void;
+	resolveModuleId?: (params: ResolveModuleIdParams) => string;
+	resolveModuleImport?: (params: ResolveModuleImportParams) => string;
 	verbose?: boolean;
 }
 
@@ -165,6 +183,10 @@ function isNodeKindExportAssignment(value: ts.Node): value is ts.ExportAssignmen
 	return value && value.kind === ts.SyntaxKind.ExportAssignment;
 }
 
+function isNodeKindModuleDeclaration(value: ts.Node): value is ts.ModuleDeclaration {
+	return value && value.kind === ts.SyntaxKind.ModuleDeclaration;
+}
+
 export default function generate(options: Options): Promise<void> {
 
 	const noop = function (message?: any, ...optionalParams: any[]): void {};
@@ -263,6 +285,8 @@ export default function generate(options: Options): Promise<void> {
 		writeDeclaration(ts.createSourceFile(filename, data, target, true), true);
 	}
 
+	let declaredExternalModules: string[] = [];
+
 	return new Promise<void>(function (resolve, reject) {
 		output.on('close', () => { resolve(undefined); });
 		output.on('error', reject);
@@ -277,6 +301,19 @@ export default function generate(options: Options): Promise<void> {
 		sendMessage('processing:');
 		let mainExportDeclaration = false;
 		let mainExportAssignment = false;
+
+		program.getSourceFiles().forEach(function (sourceFile) {
+			processTree(sourceFile, function (node) {
+				if (isNodeKindModuleDeclaration(node)) {
+					const name = node.name;
+					if (isNodeKindStringLiteral(name)) {
+						declaredExternalModules.push(name.text);
+					}
+				}
+				return null;
+			});
+		});
+
 		program.getSourceFiles().some(function (sourceFile) {
 			// Source file is a default library, or other dependency from another project, that should not be included in
 			// our bundled output
@@ -351,17 +388,47 @@ export default function generate(options: Options): Promise<void> {
 
 		const sourceModuleId = options.name ? options.name + filenameToMid(filename.slice(outDir.length, -DTSLEN)) : filenameToMid(filename.slice(outDir.length + 1, -DTSLEN));
 
+		const currentModuleId = filenameToMid(filename.slice(outDir.length + 1, -DTSLEN));
+		function resolveModuleImport(moduleId: string): string {
+			const isDeclaredExternalModule: boolean = declaredExternalModules.indexOf(moduleId) !== -1;
+
+			if (options.resolveModuleImport) {
+				const resolved: string = options.resolveModuleImport({
+					importedModuleId: moduleId,
+					currentModuleId: currentModuleId,
+					isDeclaredExternalModule: isDeclaredExternalModule
+				});
+				if (resolved) {
+					return resolved;
+				}
+			}
+
+			if (moduleId.charAt(0) === '.') {
+				return filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), moduleId));
+			}
+		}
 		/* For some reason, SourceFile.externalModuleIndicator is missing from 1.6+, so having
 		 * to use a sledgehammer on the nut */
 		if ((<any> declarationFile).externalModuleIndicator) {
-			output.write('declare module \'' + sourceModuleId + '\' {' + eol + indent);
+			let resolvedModuleId: string = sourceModuleId;
+			if (options.resolveModuleId) {
+				const resolveModuleIdResult: string = options.resolveModuleId({
+					currentModuleId: currentModuleId
+				});
+				if (resolveModuleIdResult) {
+					resolvedModuleId = resolveModuleIdResult;
+				}
+			}
+
+			output.write('declare module \'' + resolvedModuleId + '\' {' + eol + indent);
 
 			const content = processTree(declarationFile, function (node) {
 				if (isNodeKindExternalModuleReference(node)) {
 					const expression = node.expression as ts.LiteralExpression;
 
-					if (expression.text.charAt(0) === '.') {
-						return ' require(\'' + filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), expression.text)) + '\')';
+					const resolved: string = resolveModuleImport(expression.text);
+					if (resolved) {
+						return ' require(\'' + resolved + '\')';
 					}
 				}
 				else if (node.kind === ts.SyntaxKind.DeclareKeyword) {
@@ -372,8 +439,10 @@ export default function generate(options: Options): Promise<void> {
 					(isNodeKindExportDeclaration(node.parent) || isNodeKindImportDeclaration(node.parent))
 				) {
 					const text = node.text;
-					if (text.charAt(0) === '.') {
-						return ` '${filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), text))}'`;
+
+					const resolved: string = resolveModuleImport(text);
+					if (resolved) {
+						return ` '${resolved}'`;
 					}
 				}
 			});

@@ -1,0 +1,20 @@
+{
+	"version": "1.6.2",
+	"compilerOptions": {
+		"target": "es5",
+		"module": "umd",
+		"rootDir": ".",
+		"declaration": false,
+		"noImplicitAny": true
+	},
+	"files": [
+		"./index.ts",
+		"./FooImplExportAssignment.ts",
+		"./FooImplExportDeclaration.ts",
+		"./FooInterfaceExportAssignment.ts",
+		"./FooInterfaceExportDeclaration.ts",
+		"./ExternalModuleDeclaration.d.ts",
+		"./ReExport.ts",
+		"./NonRelative.ts"
+	]
+}

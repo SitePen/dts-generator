@@ -84,6 +84,8 @@ import Foo = require('package-name/Foo');
 * `out: string`: The filename where the generated bundle will be created.
 * `project?: string`: The base directory for the project being bundled.  It is assumed that this directory contains a `tsconfig.json` which will be parsed to determine the files that should be bundled as well as other configuration information like `target`
 * `target?: ts.ScriptTarget`: The target environment for generated code. Defaults to `ts.ScriptTarget.Latest`.
+* `resolveModuleId: (params: ResolveModuleIdParams) => string`: An optional callback provided by the invoker to customize the declared module ids the output d.ts files. For details see [resolving module ids](docs/resolving-module-ids.md).
+* `resolveModuleImport: (params: ResolveModuleImportParams) => string`: An optional callback provided by the invoker to customize the imported module ids in the output d.ts files. For details see [resolving module ids](docs/resolving-module-ids.md).
 
 ## Known issues
 
