@@ -37,13 +37,11 @@ export interface Options {
 	name?: string;
 	out: string;
 	outDir?: string;
-	rootDir?: string;
 	target?: ts.ScriptTarget;
 	sendMessage?: (message: any, ...optionalParams: any[]) => void;
 	resolveModuleId?: (params: ResolveModuleIdParams) => string;
 	resolveModuleImport?: (params: ResolveModuleImportParams) => string;
 	verbose?: boolean;
-	jsx?: ts.JsxEmit;
 }
 
 // declare some constants so we don't have magic integers without explanation
@@ -140,7 +138,7 @@ function processTree(sourceFile: ts.SourceFile, replacer: (node: ts.Node) => str
  * @param options The dts-generator options to load config into
  * @param fileName The path to the file
  */
-function getTSConfig(options: Options, fileName: string): void {
+function getTSConfig(options: Options, fileName: string): [string[], ts.CompilerOptions] {
 	// TODO this needs a better design than merging stuff into options.
 	// the trouble is what to do when no tsconfig is specified...
 
@@ -154,21 +152,11 @@ function getTSConfig(options: Options, fileName: string): void {
 	if (configParseResult.errors && configParseResult.errors.length) {
 		throw getError(configParseResult.errors);
 	}
-	options.target = configParseResult.options.target;
-	if (configParseResult.options.outDir) {
-		options.outDir = configParseResult.options.outDir;
-	}
-	if (configParseResult.options.moduleResolution) {
-		options.moduleResolution = configParseResult.options.moduleResolution;
-	}
-	if (configParseResult.options.rootDir) {
-		options.rootDir = configParseResult.options.rootDir;
-	}
-	options.files = configParseResult.fileNames;
 
-	if (configParseResult.options.jsx) {
-		options.jsx = configParseResult.options.jsx;
-	}
+	return [
+		configParseResult.fileNames,
+		configParseResult.options
+	];
 }
 
 function isNodeKindImportDeclaration(value: ts.Node): value is ts.ImportDeclaration {
@@ -201,6 +189,8 @@ export default function generate(options: Options): Promise<void> {
 	const sendMessage = options.sendMessage || noop;
 	const verboseMessage = options.verbose ? sendMessage : noop;
 
+	let compilerOptions: ts.CompilerOptions = {};
+	let files: string[] = options.files;
 	/* following tsc behaviour, if a project is specified, or if no files are specified then
 	 * attempt to load tsconfig.json */
 	if (options.project || !options.files || options.files.length === 0) {
@@ -224,7 +214,7 @@ export default function generate(options: Options): Promise<void> {
 
 		if (fs.existsSync(tsconfigFilename)) {
 			verboseMessage(`  parsing "${tsconfigFilename}"`);
-			getTSConfig(options, tsconfigFilename);
+			[files, compilerOptions] = getTSConfig(options, tsconfigFilename);
 		}
 		else {
 			sendMessage(`No "tsconfig.json" found at "${tsconfigFilename}"!`);
@@ -234,35 +224,28 @@ export default function generate(options: Options): Promise<void> {
 		}
 	}
 
-	const baseDir = pathUtil.resolve(options.rootDir || options.project || options.baseDir);
-	verboseMessage(`baseDir = "${baseDir}"`);
 	const eol = options.eol || os.EOL;
 	const nonEmptyLineStart = new RegExp(eol + '(?!' + eol + '|$)', 'g');
 	const indent = options.indent === undefined ? '\t' : options.indent;
-	const target = typeof options.target !== 'undefined' ? options.target : ts.ScriptTarget.Latest;
-	verboseMessage(`taget = ${target}`);
-	const compilerOptions: ts.CompilerOptions = {
-		declaration: true,
-		module: ts.ModuleKind.CommonJS,
-		target: target
-	};
-	if (options.outDir) {
-		verboseMessage(`outDir = ${options.outDir}`);
-		compilerOptions.outDir = options.outDir;
-	}
-	if (options.rootDir) {
-		verboseMessage(`rootDir = ${options.rootDir}`);
-		compilerOptions.rootDir = options.rootDir;
-	}
-	if (options.moduleResolution) {
-		verboseMessage(`moduleResolution = ${options.moduleResolution}`);
-		compilerOptions.moduleResolution = options.moduleResolution;
-	}
-	if (options.jsx) {
-		compilerOptions.jsx = options.jsx;
-	}
 
-	const filenames = getFilenames(baseDir, options.files);
+	// use input values if tsconfig leaves any of these undefined.
+	// this is for backwards compatibility
+	compilerOptions.declaration = true;
+	compilerOptions.target = compilerOptions.target || ts.ScriptTarget.Latest; // is this necessary?
+	compilerOptions.moduleResolution = compilerOptions.moduleResolution || options.moduleResolution;
+	compilerOptions.outDir = compilerOptions.outDir || options.outDir;
+
+	// TODO should compilerOptions.baseDir come into play?
+	const baseDir = pathUtil.resolve(compilerOptions.rootDir || options.project || options.baseDir);
+	const outDir = compilerOptions.outDir;
+
+	verboseMessage(`baseDir = "${baseDir}"`);
+	verboseMessage(`target = ${compilerOptions.target}`);
+	verboseMessage(`outDir = ${compilerOptions.outDir}`);
+	verboseMessage(`rootDir = ${compilerOptions.rootDir}`);
+	verboseMessage(`moduleResolution = ${compilerOptions.moduleResolution}`);
+
+	const filenames = getFilenames(baseDir, files);
 	verboseMessage('filenames:');
 	filenames.forEach(name => { verboseMessage('  ' + name); });
 	const excludesMap: { [filename: string]: boolean; } = {};
@@ -293,7 +276,7 @@ export default function generate(options: Options): Promise<void> {
 			return;
 		}
 
-		writeDeclaration(ts.createSourceFile(filename, data, target, true), true);
+		writeDeclaration(ts.createSourceFile(filename, data, compilerOptions.target, true), true);
 	}
 
 	let declaredExternalModules: string[] = [];
@@ -402,11 +385,11 @@ export default function generate(options: Options): Promise<void> {
 		// However we have to account for .d.ts files in our inputs that this code
 		// is also used for.  Also if no outDir is used, the compiled code ends up
 		// alongside the source, so use baseDir in that case too.
-		const outDir = (isOutput && Boolean(options.outDir)) ? pathUtil.resolve(options.outDir) : baseDir;
+		const outputDir = (isOutput && Boolean(outDir)) ? pathUtil.resolve(outDir) : baseDir;
 
-		const sourceModuleId = options.name ? options.name + filenameToMid(filename.slice(outDir.length, -DTSLEN)) : filenameToMid(filename.slice(outDir.length + 1, -DTSLEN));
+		const sourceModuleId = options.name ? options.name + filenameToMid(filename.slice(outputDir.length, -DTSLEN)) : filenameToMid(filename.slice(outputDir.length + 1, -DTSLEN));
 
-		const currentModuleId = filenameToMid(filename.slice(outDir.length + 1, -DTSLEN));
+		const currentModuleId = filenameToMid(filename.slice(outputDir.length + 1, -DTSLEN));
 		function resolveModuleImport(moduleId: string): string {
 			const isDeclaredExternalModule: boolean = declaredExternalModules.indexOf(moduleId) !== -1;
 
