@@ -6,6 +6,7 @@ export default function main(argv: string[]): Promise<number | void> {
 		baseDir?: string;
 		exclude?: string[];
 		externs?: string[];
+		types?: string[];
 		files: string[];
 		project?: string;
 		sendMessage?: (message: any, ...optionalParams: any[]) => void;
@@ -36,6 +37,13 @@ export default function main(argv: string[]): Promise<number | void> {
 				}
 
 				kwArgs.externs.push(value);
+			}
+			else if (key === 'types') {
+				if (!kwArgs.types) {
+					kwArgs.types = [];
+				}
+
+				kwArgs.types.push(value);
 			}
 			else if (key === 'verbose') {
 				kwArgs.verbose = true;

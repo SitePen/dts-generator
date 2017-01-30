@@ -175,5 +175,29 @@ registerSuite({
 			assert.include(contents, `declare module 'foo/FooImplExportAssignment'`);
 			assert.include(contents, `declare module 'foo/FooImplExportDeclaration'`);
 		});
-	}
+	},
+	'add reference types package dependency  ': function () {
+		return generate({
+			name: 'foo',
+			baseDir: 'tests/support/foo',
+			files: [ 'index.ts' ],
+			types: ['es6-promise'],
+			out: 'tmp/foo.d.ts'
+		}).then(function () {
+			const contents = fs.readFileSync('tmp/foo.d.ts', { encoding: 'utf8' });
+			assert.include(contents, `/// <reference types="es6-promise" />`);
+		});
+	},
+	'add external path dependency  ': function () {
+		return generate({
+			name: 'foo',
+			baseDir: 'tests/support/foo',
+			files: [ 'index.ts' ],
+			externs: ['../some/path/es6-promise.d.ts'],
+			out: 'tmp/foo.d.ts'
+		}).then(function () {
+			const contents = fs.readFileSync('tmp/foo.d.ts', { encoding: 'utf8' });
+			assert.include(contents, `/// <reference path="../some/path/es6-promise.d.ts" />`);
+		});
+	},
 });

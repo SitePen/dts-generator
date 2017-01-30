@@ -75,6 +75,8 @@ import Foo = require('package-name/Foo');
   the `--exclude` flag one or more times on the command-line. Defaults to `[ "node_modules/**/*.d.ts" ]`.
 * `externs?: string[]`: A list of external module reference paths that should be inserted as reference comments. Use
   the `--extern` flag one or more times on the command-line.
+* `types?: string[]`: A list of external @types package dependencies that should be inserted as reference comments. Use
+  the `--types` flag one or more times on the command-line.
 * `files: string[]`: A list of files from the baseDir to bundle.
 * `eol?: string`: The end-of-line character that should be used when outputting code. Defaults to `os.EOL`.
 * `indent?: string`: The character(s) that should be used to indent the declarations in the output. Defaults to `\t`.

@@ -28,6 +28,7 @@ export interface Options {
 	files?: string[];
 	exclude?: string[];
 	externs?: string[];
+	types?: string[];
 	eol?: string;
 	includes?: string[];
 	indent?: string;
@@ -305,6 +306,13 @@ export default function generate(options: Options): Promise<void> {
 			options.externs.forEach(function (path: string) {
 				sendMessage(`Writing external dependency ${path}`);
 				output.write(`/// <reference path="${path}" />` + eol);
+			});
+		}
+
+		if (options.types) {
+			options.types.forEach(function (type: string) {
+				sendMessage(`Writing external @types package dependency ${type}`);
+				output.write(`/// <reference types="${type}" />` + eol);
 			});
 		}
 
