@@ -10,7 +10,7 @@ registerSuite({
 	},
 	basic: function () {
 		return dtsGenerator([
-			'-name',
+			'-prefix',
 			'foo',
 			'-project',
 			'tests/support/foo',

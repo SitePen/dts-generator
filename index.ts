@@ -37,6 +37,8 @@ export interface Options {
 	name?: string;
 	out: string;
 	outDir?: string;
+	prefix?: string;
+	rootDir?: string;
 	target?: ts.ScriptTarget;
 	sendMessage?: (message: any, ...optionalParams: any[]) => void;
 	resolveModuleId?: (params: ResolveModuleIdParams) => string;
@@ -185,6 +187,24 @@ function isNodeKindModuleDeclaration(value: ts.Node): value is ts.ModuleDeclarat
 
 export default function generate(options: Options): Promise<void> {
 
+	if (Boolean(options.main) !== Boolean(options.name)) {
+		if (Boolean(options.name)) {
+			// since options.name used to do double duty as the prefix, let's be
+			// considerate and point out that name should be replaced with prefix.
+			// TODO update this error message when we finalize which version this change
+			// will be released in.
+			throw new Error(
+				`name and main must be used together.  Perhaps you want prefix instead of
+				name? In dts-generator version 2.1, name did double duty as the option to
+				use to prefix module names with, but in >=2.2 the name option was split
+				into two; prefix is what is now used to prefix imports and module names
+				in the output.`
+			);
+		} else {
+			throw new Error('name and main must be used together.');
+		}
+	}
+
 	const noop = function (message?: any, ...optionalParams: any[]): void {};
 	const sendMessage = options.sendMessage || noop;
 	const verboseMessage = options.verbose ? sendMessage : noop;
@@ -302,6 +322,7 @@ export default function generate(options: Options): Promise<void> {
 		sendMessage('processing:');
 		let mainExportDeclaration = false;
 		let mainExportAssignment = false;
+		let foundMain = false;
 
 		program.getSourceFiles().forEach(function (sourceFile) {
 			processTree(sourceFile, function (node) {
@@ -335,7 +356,8 @@ export default function generate(options: Options): Promise<void> {
 			}
 
 			// We can optionally output the main module if there's something to export.
-			if (options.main && options.main === (options.name + filenameToMid(sourceFile.fileName.slice(baseDir.length, -3)))) {
+			if (options.main && options.main === (options.prefix + filenameToMid(sourceFile.fileName.slice(baseDir.length, -3)))) {
+				foundMain = true;
 				ts.forEachChild(sourceFile, function (node: ts.Node) {
 					mainExportDeclaration = mainExportDeclaration || isNodeKindExportDeclaration(node);
 					mainExportAssignment = mainExportAssignment || isNodeKindExportAssignment(node);
@@ -355,7 +377,11 @@ export default function generate(options: Options): Promise<void> {
 			}
 		});
 
-		if (options.main && options.name) {
+		if (options.main && !foundMain) {
+			throw new Error(`main module ${options.main} was not found`);
+		}
+
+		if (options.main) {
 			output.write(`declare module '${options.name}' {` + eol + indent);
 			if (compilerOptions.target >= ts.ScriptTarget.ES2015) {
 				if (mainExportAssignment) {
@@ -387,27 +413,44 @@ export default function generate(options: Options): Promise<void> {
 		// alongside the source, so use baseDir in that case too.
 		const outputDir = (isOutput && Boolean(outDir)) ? pathUtil.resolve(outDir) : baseDir;
 
-		const sourceModuleId = options.name ? options.name + filenameToMid(filename.slice(outputDir.length, -DTSLEN)) : filenameToMid(filename.slice(outputDir.length + 1, -DTSLEN));
+		const sourceModuleId = filenameToMid(filename.slice(outputDir.length + 1, -DTSLEN));
 
 		const currentModuleId = filenameToMid(filename.slice(outputDir.length + 1, -DTSLEN));
 		function resolveModuleImport(moduleId: string): string {
 			const isDeclaredExternalModule: boolean = declaredExternalModules.indexOf(moduleId) !== -1;
+			let resolved: string;
 
 			if (options.resolveModuleImport) {
-				const resolved: string = options.resolveModuleImport({
+				resolved = options.resolveModuleImport({
 					importedModuleId: moduleId,
 					currentModuleId: currentModuleId,
 					isDeclaredExternalModule: isDeclaredExternalModule
 				});
-				if (resolved) {
-					return resolved;
+			}
+
+			if (!resolved) {
+				// resolve relative imports relative to the current module id.
+				if (moduleId.charAt(0) === '.') {
+					resolved = filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), moduleId));
+				} else {
+					resolved = moduleId;
+				}
+
+				// prefix the import with options.prefix, so that both non-relative imports
+				// and relative imports end up prefixed with options.prefix.  We only
+				// do this when no resolveModuleImport function is given so that that
+				// function has complete control of the imports that get outputed.
+				// NOTE: we may want to revisit the isDeclaredExternalModule behavior.
+				// discussion is on https://github.com/SitePen/dts-generator/pull/94
+				// but currently there's no strong argument against this behavior.
+				if (Boolean(options.prefix) && !isDeclaredExternalModule) {
+					resolved = `${options.prefix}/${resolved}`;
 				}
 			}
 
-			if (moduleId.charAt(0) === '.') {
-				return filenameToMid(pathUtil.join(pathUtil.dirname(sourceModuleId), moduleId));
-			}
+			return resolved;
 		}
+
 		/* For some reason, SourceFile.externalModuleIndicator is missing from 1.6+, so having
 		 * to use a sledgehammer on the nut */
 		if ((<any> declarationFile).externalModuleIndicator) {
@@ -418,19 +461,26 @@ export default function generate(options: Options): Promise<void> {
 				});
 				if (resolveModuleIdResult) {
 					resolvedModuleId = resolveModuleIdResult;
+				} else if (options.prefix) {
+					resolvedModuleId = `${options.prefix}/${resolvedModuleId}`;
 				}
+			} else if (options.prefix) {
+				resolvedModuleId = `${options.prefix}/${resolvedModuleId}`;
 			}
 
 			output.write('declare module \'' + resolvedModuleId + '\' {' + eol + indent);
 
 			const content = processTree(declarationFile, function (node) {
 				if (isNodeKindExternalModuleReference(node)) {
+					// TODO figure out if this branch is possible, and if so, write a test
+					// that covers it.
+
 					const expression = node.expression as ts.LiteralExpression;
 
+					// convert both relative and non-relative module names in import = require(...)
+					// statements.
 					const resolved: string = resolveModuleImport(expression.text);
-					if (resolved) {
-						return ' require(\'' + resolved + '\')';
-					}
+					return ` require('${resolved}')`;
 				}
 				else if (node.kind === ts.SyntaxKind.DeclareKeyword) {
 					return '';
@@ -439,8 +489,8 @@ export default function generate(options: Options): Promise<void> {
 					isNodeKindStringLiteral(node) && node.parent &&
 					(isNodeKindExportDeclaration(node.parent) || isNodeKindImportDeclaration(node.parent))
 				) {
+					// This block of code is modifying the names of imported modules
 					const text = node.text;
-
 					const resolved: string = resolveModuleImport(text);
 					if (resolved) {
 						return ` '${resolved}'`;
