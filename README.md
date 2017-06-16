@@ -59,7 +59,7 @@ module.exports = function (grunt) {
 
 3. Reference your generated d.ts bundle from somewhere in your consumer module and import away!:
 
-   ```ts
+```ts
 /// <reference path="typings/package-name.d.ts" />
 
 import Foo = require('package-name/Foo');
