@@ -23,7 +23,7 @@ JavaScript that users can simply reference from the TypeScript compiler using a 
 
    Programmatically:
 
-   ```js
+```js
 require('dts-generator').default({
 		name: 'package-name',
 		project: '/path/to/package-directory',
@@ -33,13 +33,13 @@ require('dts-generator').default({
 
    Command-line:
 
-   ```bash
+```bash
 dts-generator --name package-name --project /path/to/package-directory --out package-name.d.ts
 ```
 
    Grunt:
 
-   ```js
+```js
 module.exports = function (grunt) {
 	grunt.loadNpmTasks('dts-generator');
 	grunt.initConfig({
