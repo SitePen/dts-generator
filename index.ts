@@ -273,7 +273,7 @@ export default function generate(options: Options): Promise<void> {
 	options.exclude = options.exclude || [ 'node_modules/**/*.d.ts' ];
 
 	options.exclude && options.exclude.forEach(function (filename) {
-		glob.sync(filename).forEach(function(globFileName) {
+		glob.sync(filename, { cwd: baseDir }).forEach(function(globFileName) {
 			excludesMap[filenameToMid(pathUtil.resolve(baseDir, globFileName))] = true;
 		});
 	});

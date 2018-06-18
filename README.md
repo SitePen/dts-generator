@@ -70,7 +70,8 @@ import Foo = require('package-name/Foo');
 ## Options
 
 * `baseDir?: string`: The base directory for the package being bundled. Any dependencies discovered outside this
-  directory will be excluded from the bundle.  *Note* this is no longer the preferred way to configure `dts-generator`, please see `project`.
+  directory will be excluded from the bundle.  *Note* this is no longer the preferred way to configure `dts-generator`, 
+  it automatically gets its value from compiler option `rootDir` if specified in `tsconfig.json`, otherwise it gets value from `project`. Please see option `project`.
 * `exclude?: string[]`: A list of glob patterns, relative to `baseDir`, that should be excluded from the bundle. Use
   the `--exclude` flag one or more times on the command-line. Defaults to `[ "node_modules/**/*.d.ts" ]`.
 * `externs?: string[]`: A list of external module reference paths that should be inserted as reference comments. Use
