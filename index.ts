@@ -3,7 +3,6 @@ import * as glob from 'glob';
 import * as mkdirp from 'mkdirp';
 import * as os from 'os';
 import * as pathUtil from 'path';
-import * as Promise from 'bluebird';
 import * as ts from 'typescript';
 
 export interface ResolveModuleIdParams {
@@ -140,7 +139,7 @@ function processTree(sourceFile: ts.SourceFile, replacer: (node: ts.Node) => str
  * @param options The dts-generator options to load config into
  * @param fileName The path to the file
  */
-function getTSConfig(options: Options, fileName: string): [string[], ts.CompilerOptions] {
+function getTSConfig(fileName: string): [string[], ts.CompilerOptions] {
 	// TODO this needs a better design than merging stuff into options.
 	// the trouble is what to do when no tsconfig is specified...
 
@@ -205,7 +204,7 @@ export default function generate(options: Options): Promise<void> {
 		}
 	}
 
-	const noop = function (message?: any, ...optionalParams: any[]): void {};
+	const noop = function () {};
 	const sendMessage = options.sendMessage || noop;
 	const verboseMessage = options.verbose ? sendMessage : noop;
 
@@ -234,11 +233,11 @@ export default function generate(options: Options): Promise<void> {
 
 		if (fs.existsSync(tsconfigFilename)) {
 			verboseMessage(`  parsing "${tsconfigFilename}"`);
-			[files, compilerOptions] = getTSConfig(options, tsconfigFilename);
+			[files, compilerOptions] = getTSConfig(tsconfigFilename);
 		}
 		else {
 			sendMessage(`No "tsconfig.json" found at "${tsconfigFilename}"!`);
-			return new Promise<void>(function (resolve, reject) {
+			return new Promise<void>(function ({}, reject) {
 				reject(new SyntaxError('Unable to resolve configuration.'));
 			});
 		}
@@ -290,7 +289,7 @@ export default function generate(options: Options): Promise<void> {
 	const host = ts.createCompilerHost(compilerOptions);
 	const program = ts.createProgram(filenames, compilerOptions, host);
 
-	function writeFile(filename: string, data: string, writeByteOrderMark: boolean) {
+	function writeFile(filename: string, data: string) {
 		// Compiler is emitting the non-declaration file, which we do not care about
 		if (filename.slice(-DTSLEN) !== '.d.ts') {
 			return;

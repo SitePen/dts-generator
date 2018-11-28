@@ -1,9 +1,9 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import dtsGenerator from '../../../bin/dts-generator';
 
-registerSuite({
-	name: 'bin/dts-generator',
+const { registerSuite } = intern.getPlugin('interface.object');
+const { assert } = intern.getPlugin('chai');
+
+registerSuite('bin/dts-generator', {
 	api: function () {
 		assert.isFunction(dtsGenerator, 'dtsGenerator should be a function');
 		assert.strictEqual(Object.keys(dtsGenerator).length, 0, 'There should be no other keys');

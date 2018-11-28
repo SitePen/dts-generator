@@ -1,18 +1,18 @@
 {
-	"version": "2.0.2",
+	"version": "3.1.6",
 	"compilerOptions": {
-		"target": "es5",
+		"target": "es2015",
 		"module": "umd",
 		"declaration": false,
 		"noImplicitAny": true,
 		"noImplicitThis": true,
+		"noUnusedParameters": true,
 		"strictNullChecks": false,
 		"moduleResolution": "node"
 	},
 	"include": [
 		"./*.ts",
 		"./bin/**/*.ts",
-		"./typings/tsd.d.ts",
 		"./node_modules/typescript/lib/typescript.d.ts",
 		"./node_modules/typescript/lib/typescript.ts"
 	]

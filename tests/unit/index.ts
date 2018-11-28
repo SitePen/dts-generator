@@ -1,10 +1,10 @@
-import * as registerSuite from 'intern!object';
-import * as assert from 'intern/chai!assert';
 import generate, { ResolveModuleIdParams, ResolveModuleImportParams } from '../../index';
 import * as fs from 'fs';
 
-registerSuite({
-	name: 'index',
+const { registerSuite } = intern.getPlugin('interface.object');
+const { assert } = intern.getPlugin('chai');
+
+registerSuite('index', {
 	'api': function () {
 		assert.isFunction(generate, 'generate should be a function');
 	},
