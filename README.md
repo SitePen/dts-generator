@@ -101,4 +101,4 @@ figure out how to influence the code emitter.
 
 ## Licensing
 
-© 2015 SitePen, Inc. New BSD License.
+© 2015-2019 SitePen, Inc. New BSD License.
