@@ -338,7 +338,7 @@ export default function generate(options: Options): Promise<void> {
 		program.getSourceFiles().some(function (sourceFile) {
 			// Source file is a default library, or other dependency from another project, that should not be included in
 			// our bundled output
-			if (pathUtil.normalize(sourceFile.fileName).indexOf(baseDir) !== 0) {
+			if (pathUtil.normalize(sourceFile.fileName).indexOf(baseDir + pathUtil.sep) !== 0) {
 				return;
 			}
 
